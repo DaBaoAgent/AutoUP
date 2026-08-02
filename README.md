@@ -1,3 +1,11 @@
+<!-- README-PROMO:START -->
+<p align="center">
+  <img src="assets/readme/hero.webp" alt="AutoYY：面向中文创作者的纪录片解说自动化 Codex Skill" width="100%" />
+  <img src="assets/readme/workflow.webp" alt="AutoYY 工作流：数据分析、选题核验、口播文案、封面发布与批量验收" width="100%" />
+  <img src="assets/readme/beginner.webp" alt="AutoYY 新手上手：安装 Skill，从选题到内容交付" width="100%" />
+</p>
+<!-- README-PROMO:END -->
+
 # AutoYY — 纪录片解说自动化 Codex Skill
 
 AutoYY 是面向中文纪录片解说创作者的 Codex 自动化技能，将多平台数据分析、YouTube 长视频选题、授权素材与字幕工作流、中文口播稿、短视频封面、发布标题与标签，以及批量交付验收整合为一套可复用流程。
