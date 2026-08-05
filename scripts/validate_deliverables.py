@@ -106,6 +106,23 @@ def validate_topic(folder: Path, min_script_chars: int, max_script_chars: int) -
 
     publish_path = folder / "发布信息.txt"
     script_path = folder / "爆款口播稿.txt"
+    superseded_scripts = sorted(
+        item.name
+        for item in folder.iterdir()
+        if item.is_file()
+        and (
+            item.name == "爆款钩子文案.txt"
+            or (
+                item.name.startswith("爆款口播稿-")
+                and item.suffix.lower() == ".txt"
+            )
+        )
+    )
+    if superseded_scripts:
+        issues.append(
+            "superseded voiceover files remain: "
+            + ", ".join(superseded_scripts)
+        )
     if not publish_path.exists() or publish_path.stat().st_size == 0:
         issues.append("发布信息.txt missing or empty")
     else:

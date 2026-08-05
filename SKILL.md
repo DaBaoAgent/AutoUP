@@ -1,6 +1,6 @@
 ---
 name: autoyy
-description: Plan, produce, refresh, and validate documentary-explainer content packages from performance screenshots, topic research, and long-form source videos. Use when Codex needs to analyze multi-platform creator data; identify repeatable documentary topics; search and verify 30+ minute YouTube sources; prepare a download manifest; download authorized HD video and subtitles; write Chinese voiceover scripts; create or recursively bulk-refresh Douyin-ready publication metadata; generate photorealistic topic or collection covers; resume an interrupted batch; or audit whether every topic folder is complete.
+description: Plan, produce, refresh, and validate documentary-explainer content packages from performance screenshots, topic research, and long-form source videos. Use when Codex needs to analyze multi-platform creator data; identify repeatable documentary topics; search and verify 30+ minute YouTube sources; prepare a download manifest; download authorized HD video and subtitles; write and humanize Chinese voiceover scripts; create or recursively bulk-refresh Douyin-ready publication metadata; generate photorealistic topic or collection covers; resume an interrupted batch; or audit whether every topic folder is complete.
 ---
 
 # Produce Documentary Content
@@ -23,6 +23,7 @@ Use `D:\自动剪辑` as the default working root. If the user does not provide 
 - Browse the web for current YouTube links, view counts, availability, duration, quality, and recommendations. Treat all volatile metrics as dated observations.
 - Use Chrome control only when the user explicitly needs signed-in browser state. Use `--cookies-from-browser` only after explicit authorization.
 - Use the image-generation skill for all raster cover generation and edits. Load the relevant master cover from `assets/` as a style reference.
+- Use the installed `$remove-ai-flavor` skill as the required second editorial pass for every newly generated or substantially rewritten Chinese voiceover. If it is unavailable, use the fallback rules in `references/content-style.md` and report that the external pass was skipped.
 - Use `scripts/download_from_manifest.ps1` for repeatable Windows batch downloads.
 - Use `scripts/validate_publication_info.py` to recursively audit publication files, including topic folders nested under archive directories such as `@已发`.
 - Use `scripts/validate_deliverables.py` for the final folder audit.
@@ -91,6 +92,16 @@ Default requirements:
 - short, speakable sentences with technical terms explained simply;
 - no invented facts, unrelated filler, duplicated paragraphs, template transitions, or calls to follow/share.
 
+After drafting:
+
+1. Keep the first draft under a versioned filename; do not promote it to `爆款口播稿.txt` yet.
+2. Invoke `$remove-ai-flavor` on the full draft as Chinese documentary voiceover. Preserve facts, numbers, names, quotes, uncertainty, chronology, tone, and the user's target length. Prefer local sentence or paragraph repairs over a wholesale rewrite.
+3. When the installed skill package exposes `scripts/audit_ai_flavor.py`, run it with `--fail-on-review`. Treat its result as a regression signal, then manually review context instead of deleting every flagged phrase blindly.
+4. Recheck factual consistency against the subtitle/transcript, spoken rhythm, opening hook, ending, and character count. Promote only the cleaned narrator-ready text to `爆款口播稿.txt`; do not include edit notes or an audit report in the script.
+5. Read back and validate the promoted `爆款口播稿.txt`. Only after it exists, is non-empty, and passes the final checks, delete superseded voiceover copies in the same topic directory, including `爆款钩子文案.txt` and versioned `爆款口播稿-*` drafts. Leave only `爆款口播稿.txt` as the script deliverable. If validation fails, retain the drafts for repair. Never delete subtitles, source notes, publication information, or unrelated text files.
+
+Remove padding-based binary contrasts, ceremonial sequencing, abstract essence claims, assistant route markers, repeated template colons, over-even paragraph shapes, and generic engagement questions. Keep a contrast, sequence, or question when it carries necessary facts, causality, quoted speech, or a user-requested specific comment hook.
+
 Do not pad to length. If the source cannot support the requested duration, state the evidence gap and propose supplemental sources.
 
 ### 7. Create publication information
@@ -149,7 +160,7 @@ Do not report success until deterministic validation and manual checks agree. Re
 - Skip complete video and subtitle files.
 - Never replace an approved script or cover without explicit instruction.
 - Keep logs and manifest state so a stopped batch can continue.
-- Use versioned filenames for drafts; use final standard filenames only after approval.
+- Use versioned filenames while drafting; after a verified promotion, remove superseded voiceover copies and retain only the final standard filename.
 
 ## Resources
 
