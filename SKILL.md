@@ -22,8 +22,8 @@ Use `D:\自动剪辑` as the default working root. If the user does not provide 
 - Read every supplied screenshot. Use visual inspection and OCR; use the spreadsheet skill when consolidating or analyzing tabular records.
 - Browse the web for current YouTube links, view counts, availability, duration, quality, and recommendations. Treat all volatile metrics as dated observations.
 - Use Chrome control only when the user explicitly needs signed-in browser state. Use `--cookies-from-browser` only after explicit authorization.
+- Before writing or revising any voiceover, read `vendor/blader-humanizer/SKILL.md` completely and apply its Embedded mode. This humanization pass is mandatory, including single-topic drafts, batch generation, and rewrites.
 - Use the image-generation skill for all raster cover generation and edits. Load the relevant master cover from `assets/` as a style reference.
-- Use the installed `$remove-ai-flavor` skill as the required second editorial pass for every newly generated or substantially rewritten Chinese voiceover. If it is unavailable, use the fallback rules in `references/content-style.md` and report that the external pass was skipped.
 - Use `scripts/download_from_manifest.ps1` for repeatable Windows batch downloads.
 - Use `scripts/validate_publication_info.py` to recursively audit publication files, including topic folders nested under archive directories such as `@已发`.
 - Use `scripts/validate_deliverables.py` for the final folder audit.
@@ -81,7 +81,7 @@ Prefer manual English subtitles, then automatic English, then another available 
 
 ### 6. Write the Chinese voiceover
 
-Read the full subtitle or transcript before drafting. Use subtitles as the narrative backbone and reliable sources only for necessary context. Read `references/content-style.md` for the complete specification.
+Read the full subtitle or transcript before drafting. Use subtitles as the narrative backbone and reliable sources only for necessary context. Read `references/content-style.md` and `vendor/blader-humanizer/SKILL.md` completely before writing.
 
 Default requirements:
 
@@ -95,14 +95,15 @@ Default requirements:
 After drafting:
 
 1. Keep the first draft under a versioned filename; do not promote it to `爆款口播稿.txt` yet.
-2. Invoke `$remove-ai-flavor` on the full draft as Chinese documentary voiceover. Preserve facts, numbers, names, quotes, uncertainty, chronology, tone, and the user's target length. Prefer local sentence or paragraph repairs over a wholesale rewrite.
-3. When the installed skill package exposes `scripts/audit_ai_flavor.py`, run it with `--fail-on-review`. Treat its result as a regression signal, then manually review context instead of deleting every flagged phrase blindly.
-4. Recheck factual consistency against the subtitle/transcript, spoken rhythm, opening hook, ending, and character count. Promote only the cleaned narrator-ready text to `爆款口播稿.txt`; do not include edit notes or an audit report in the script.
-5. Read back and validate the promoted `爆款口播稿.txt`. Only after it exists, is non-empty, and passes the final checks, delete superseded voiceover copies in the same topic directory, including `爆款钩子文案.txt` and versioned `爆款口播稿-*` drafts. Leave only `爆款口播稿.txt` as the script deliverable. If validation fails, retain the drafts for repair. Never delete subtitles, source notes, publication information, or unrelated text files.
+2. Run the bundled Humanizer in Embedded mode on the full draft. Complete its draft rewrite, AI-pattern audit, fabrication audit, and final rewrite internally.
+3. Preserve every supported fact, name, date, quantity, quotation, uncertainty, chronology, causal statement, target length, and the user's approved voice. Prefer local sentence or paragraph repairs when they solve the problem.
+4. Recheck the result against the subtitle/transcript, then read it aloud for spoken rhythm, opening hook, ending, and character count. If new source-grounded material is added, run the Humanizer pass again.
+5. Promote only the cleaned narrator-ready text to `爆款口播稿.txt`. Never include Humanizer notes, headings, audit bullets, or process labels in the script.
+6. After the promoted file is non-empty and passes final validation, delete superseded voiceover copies in the same topic directory, including `爆款钩子文案.txt` and versioned `爆款口播稿-*` drafts. Leave only `爆款口播稿.txt` as the script deliverable. If validation fails, retain the drafts for repair. Never delete subtitles, source notes, publication information, or unrelated text files.
 
 Remove padding-based binary contrasts, ceremonial sequencing, abstract essence claims, assistant route markers, repeated template colons, over-even paragraph shapes, and generic engagement questions. Keep a contrast, sequence, or question when it carries necessary facts, causality, quoted speech, or a user-requested specific comment hook.
 
-Do not pad to length. If the source cannot support the requested duration, state the evidence gap and propose supplemental sources.
+Do not pad to length. If the source cannot support the requested duration, state the evidence gap and propose supplemental sources. If the Humanizer instructions cannot be loaded or the pass cannot be completed, mark the voiceover blocked rather than claiming completion.
 
 ### 7. Create publication information
 
@@ -167,6 +168,7 @@ Do not report success until deterministic validation and manual checks agree. Re
 - Read `references/workflow-spec.md` for manifest fields, stage gates, and acceptance checks.
 - Read `references/tool-map.md` for the end-to-end stage, tool, supporting-skill, and output map.
 - Read `references/content-style.md` before writing scripts, publication information, or covers.
+- Use `vendor/blader-humanizer/SKILL.md` in Embedded mode for every generated or revised voiceover. `vendor/blader-humanizer/LICENSE` records the bundled upstream license.
 - Read `references/downloads.md` before media retrieval or cookie/proxy troubleshooting.
 - Use `assets/topic-manifest-template.csv` as the batch manifest schema.
 - Use `assets/topic-cover-3x4-approved.png` and `assets/topic-cover-4x3-approved.png` for the approved topic-cover typography, scale, color, outline, shadow, and layout.

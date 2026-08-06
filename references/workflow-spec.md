@@ -16,7 +16,7 @@
 2. **Topic approved:** the topic has a clear audience promise and an evidence-backed score.
 3. **Source approved:** URL, metadata, duration, resolution, content match, subtitle status, and rights note are verified.
 4. **Media ready:** a playable HD source and an SRT exist, or the topic is explicitly marked blocked.
-5. **Text ready:** the script is grounded, speakable, within target length, has completed the `$remove-ai-flavor` preservation-first pass, and has no unresolved audit blockers when the auditor is available. The verified `爆款口播稿.txt` is the only retained voiceover copy; superseded script drafts are removed after successful promotion.
+5. **Text ready:** the script is grounded, speakable, within target length, has completed the bundled Humanizer Embedded-mode pass, and passes a post-humanization fact check. The verified `爆款口播稿.txt` is the only retained voiceover copy; superseded script drafts are removed after successful promotion.
 6. **Publication ready:** every `发布信息.txt` has exactly two non-empty lines, a factual Douyin-style title of at most 25 characters, and exactly five topic-specific hashtags.
 7. **Cover ready:** both ratios, exact Chinese text, and reference style pass visual inspection.
 8. **Package complete:** deterministic validation and manual relevance checks pass.
@@ -75,6 +75,7 @@ Confirm:
 - one publication title of at most 25 characters and exactly five hashtags on a separate second line;
 - no headings, production notes, calls to action, repeated long paragraphs, assistant route markers, or unjustified AI-template sentence shells in the voiceover;
 - exactly one retained voiceover deliverable named `爆款口播稿.txt`, with no superseded `爆款钩子文案.txt` or versioned `爆款口播稿-*` copies;
+- the voiceover contains only final spoken text and shows no skipped Humanizer gate, exposed audit notes, fabricated details, or obvious template language;
 - both requested covers have correct ratios and exact in-image text;
 - no zero-byte files;
 - no silently overwritten approved assets.

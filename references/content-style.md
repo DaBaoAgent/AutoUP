@@ -6,7 +6,7 @@
 - Voiceover structure
 - Language rules
 - Prohibited patterns
-- AI-flavor removal
+- Mandatory Humanizer pass
 - Publication information
 - Topic covers
 - Collection covers
@@ -53,49 +53,31 @@ Do not include:
 
 Do not use a fixed transition library to expand every script. When the source is thin, find another reliable source or shorten the piece.
 
-## AI-flavor removal (去AI味)
+## Mandatory Humanizer pass
 
-After drafting, invoke the installed `$remove-ai-flavor` skill on the full
-Chinese voiceover. Treat it as a preservation-first editorial pass: remove
-only template shells and machine-polished structures while preserving facts,
-numbers, names, quotes, uncertainty, chronology, target tone, and the
-narrator's speaking voice. Do not invent facts, jokes, examples, dialogue, or
-personal experience to make text look human.
+Every generated or revised voiceover must pass `vendor/blader-humanizer/SKILL.md` in Embedded mode before it is saved as final. Run its draft, AI-pattern audit, fabrication audit, and final-rewrite loop internally. The output file must contain only the final spoken Chinese text.
 
-If `$remove-ai-flavor` is unavailable, apply the fallback rules below and
-report that the external skill pass was skipped. Do not silently claim that
-the skill or its audit ran.
+During humanization:
 
-High-priority shells to remove or rewrite:
+- preserve all source-supported facts, names, dates, quantities, quotations, and causal claims;
+- preserve the user's approved voice and useful specific details;
+- remove formulaic signposting, inflated significance, promotional wording, forced groups of three, false contrasts, synonym cycling, generic conclusions, manufactured punchlines, and repetitive transitions;
+- vary sentence length naturally without turning the script into stacked dramatic fragments;
+- remove em and en dashes unless an approved user writing sample clearly requires them;
+- never add a fact merely to make a sentence sound more human.
 
-- Binary contrast shells: 「不是A，而是B」「并非A，而是B」「不在于A，而在于B」「不只是A，更是B」「与其说A，不如说B」— if A is padding, delete it and state B directly.
-- Staged sequence shells: 「先A，再B」「先A，然后B」「第一步…第二步…」— keep the order only when the order changes the outcome.
-- Essence claims: 「真正重要的是」「真正决定X的是」「本质上」「核心在于」「底层逻辑」— name the actual subject; replace abstract emphasis with evidence or consequence.
-- Assistant route markers: 「接下来」「我们可以看到」「值得注意的是」「不可否认的是」「总的来说」「说白了」「划重点」— enter the actual content directly.
-- Narrowing frames: 「这次只看…」「今天只看…」「答案很简单：」— delete the setup if the next sentence carries the meaning.
-- Template punctuation and paragraph shape: repeated 「观点：解释」「概念：解释」colons, three or more parallel clauses with the same grammar, claim + explanation + summary in every paragraph, paragraphs so even that the draft looks sorted by a model. Vary paragraph weight: short beat, medium explanation, thick paragraph, short landing.
-- Unmotivated ending questions: 「你觉得呢？」「是不是很震撼？」— remove them by default. Keep one specific, discussion-worthy ending question only when the user explicitly requests a Douyin comment hook.
+Apply the bundled Humanizer patterns to Chinese as well. Remove or repair these high-priority shells when they are padding rather than necessary meaning:
 
-Pass sequence:
+- 「不是A，而是B」「并非A，而是B」「不只是A，更是B」「与其说A，不如说B」;
+- 「先A，再B」「第一步…第二步…」when the order does not change the outcome;
+- 「真正重要的是」「本质上」「核心在于」「底层逻辑」;
+- 「接下来」「我们可以看到」「值得注意的是」「不可否认的是」「总的来说」「说白了」「划重点」;
+- repeated 「观点：解释」paragraphs, mechanically even paragraph lengths, and three or more clauses with identical grammar;
+- generic ending questions such as 「你觉得呢？」 or 「是不是很震撼？」 unless the user explicitly requests a specific comment hook.
 
-1. Scan structure, voice, sentence shells, wording, and ending in that order.
-2. Repair locally when possible. Rewrite a whole paragraph only when its shape causes the AI flavor.
-3. If the installed skill package includes the auditor, run:
+After the pass, compare the final script with the source material and read it aloud. Repair awkward pronunciation, unsupported additions, factual drift, and accidental omissions. If substantial material is added after this check, run the Humanizer pass again. A script that skips this gate is not final.
 
-   ```powershell
-   python <remove-ai-flavor-skill-root>\scripts\audit_ai_flavor.py <draft.txt> --fail-on-review
-   ```
-
-4. Resolve blocker findings with context-aware edits, rerun the audit, then manually check factual fidelity, paragraph rhythm, and speakability. A clean audit is not proof that the writing is good.
-
-Quality gate before finalizing: no obvious binary-contrast / staged-sequence /
-essence-claim shell remains unless a quoted speaker justifies it; paragraph
-weights are uneven; sentence lengths vary; the text reads like a person
-telling a story, not a template being filled. The final file contains only
-narrator-ready prose, preserves every supported claim, and passes the auditor
-without unresolved blockers when the auditor is available.
-
-Keep versioned drafts during revision. After the approved text has been promoted to `爆款口播稿.txt`, read it back and confirm it is non-empty and still passes the factual, length, speakability, and AI-flavor checks. Then delete superseded voiceover files in that topic directory, including `爆款钩子文案.txt` and versioned `爆款口播稿-*` drafts. Keep the drafts when promotion or validation fails. Do not treat subtitles, research notes, publication information, or unrelated text documents as disposable drafts.
+Keep versioned drafts during revision. After the approved text has been promoted to `爆款口播稿.txt`, read it back and confirm it is non-empty and still passes factual, length, speakability, and Humanizer checks. Then delete superseded voiceover files in that topic directory, including `爆款钩子文案.txt` and versioned `爆款口播稿-*` drafts. Keep the drafts when promotion or validation fails. Do not treat subtitles, research notes, publication information, or unrelated text documents as disposable drafts.
 
 ## Publication information
 

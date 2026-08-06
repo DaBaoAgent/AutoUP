@@ -1,4 +1,4 @@
 interface:
   display_name: "AutoYY"
-  short_description: "从后台数据分析到选题、下载、文案、封面和发布信息的一体化生产流程"
-  default_prompt: "Use $autoyy to run the documentary workflow in D:\\自动剪辑, from topic research and authorized downloads through scripts, covers, publication metadata, and final validation."
+  short_description: "从数据选题到下载、去AI味口播稿、封面和发布信息的一体化流程"
+  default_prompt: "Use $autoyy to run the documentary workflow in D:\\自动剪辑, including mandatory embedded Humanizer processing for every voiceover, then covers, publication metadata, and final validation."
