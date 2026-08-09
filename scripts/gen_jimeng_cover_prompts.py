@@ -91,6 +91,15 @@ def main() -> int:
             skipped += 1
             continue
 
+        # 已有两张封面（3:4 + 4:3）→ 跳过，不需要提示词
+        import glob as _glob
+        has_34 = _glob.glob(os.path.join(target, "封面-3比4.*"))
+        has_43 = _glob.glob(os.path.join(target, "封面-4比3.*"))
+        if has_34 and has_43:
+            print(f"跳过 第{i}行: 已有封面 3:4+4:3 → {os.path.basename(target)}", file=sys.stderr)
+            skipped += 1
+            continue
+
         content = build_3x4(main6, sub8, scene_v) + "\n\n" + build_4x3(main6, sub8, scene_h)
         out = os.path.join(target, "封面提示词-即梦.txt")
         if args.dry_run:
