@@ -133,6 +133,23 @@ Read the cover section in `references/content-style.md` and use the relevant sty
 
 For topic covers, match the approved reference typography precisely: an extra-large vivid golden-yellow rough brush-calligraphy main title with a thin black outline and strong soft black shadow, followed by a medium-large white rough brush-calligraphy subtitle with the same black outline and shadow. Center both lines in the upper half, keep the subtitle about two-thirds the main-title width, and leave safe margins around every character. Use high contrast and no extra text, logo, or watermark. Inspect every generated image for exact Chinese text and actual pixel ratio before saving.
 
+#### 即梦 (Jimeng) cover-prompt mode
+
+When covers are generated externally via 即梦 instead of an in-pipeline image tool, write one `封面提示词-即梦.txt` per topic directory containing exactly two plain prompt paragraphs separated by a blank line — no instructions, headers, or usage notes inside the file:
+
+- Paragraph 1: `3:4竖版构图` prompt (portrait scene + text block placed at the upper-third).
+- Paragraph 2: `4:3横版构图` prompt (landscape wide scene + text block placed upper-center).
+
+Shared typography per topic: a six-character main title in extra-large golden-yellow rough brush calligraphy (thin black outline, soft black shadow), plus an eight-character white rough brush-calligraphy subtitle at about two-thirds the main-title width. Portrait scenes favor depth/close-up compositions; landscape scenes favor wide establishing shots. Both paragraphs must render the same title/subtitle pair.
+
+Batch generation: fill the CSV template (see Resources) with one row per topic (`目录名,主标题,副标题,竖版画面,横版画面`) and run:
+
+```powershell
+python scripts/gen_jimeng_cover_prompts.py <output-root> --csv <filled-csv>
+```
+
+The script validates 6-char/8-char title lengths, skips rows whose target directory is missing, and writes `封面提示词-即梦.txt` (UTF-8, two prompt paragraphs only). Derive the 6+8 cover text from the approved 发布信息 title and the script's factual content — do not reuse the full 25-char title verbatim.
+
 ### 9. Validate and hand off
 
 Expected topic directory:
@@ -173,6 +190,7 @@ Do not report success until deterministic validation and manual checks agree. Re
 - Use `assets/topic-manifest-template.csv` as the batch manifest schema.
 - Use `assets/topic-cover-3x4-approved.png` and `assets/topic-cover-4x3-approved.png` for the approved topic-cover typography, scale, color, outline, shadow, and layout.
 - Use `assets/collection-cover-1x1.png` and `assets/collection-cover-4x3.png` for collection-cover style.
+- Use `assets/jimeng-cover-template.csv` and `scripts/gen_jimeng_cover_prompts.py` for batch-generating 即梦 cover prompts (two plain paragraphs: 3:4 + 4:3).
 - Use `scripts/download_from_manifest.ps1` for downloading.
 - Use `scripts/validate_publication_info.py` for recursive two-line publication metadata validation.
 - Use `scripts/validate_deliverables.py` for deterministic acceptance checks.
