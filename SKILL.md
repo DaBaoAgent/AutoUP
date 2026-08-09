@@ -148,7 +148,7 @@ Batch generation: fill the CSV template (see Resources) with one row per topic (
 python scripts/gen_jimeng_cover_prompts.py <output-root> --csv <filled-csv>
 ```
 
-The script validates 6-char/8-char title lengths, skips rows whose target directory is missing, and writes `封面提示词-即梦.txt` (UTF-8, two prompt paragraphs only). It also skips any topic directory that already contains both covers (`封面-3比4.*` and `封面-4比3.*`) — when two covers exist the prompts are unnecessary. Derive the 6+8 cover text from the approved 发布信息 title and the script's factual content — do not reuse the full 25-char title verbatim.
+The script validates 6-char/8-char title lengths, skips rows whose target directory is missing, and writes `封面提示词-即梦.txt` (UTF-8, two prompt paragraphs only). It also skips any topic directory that already contains covers: the check counts image files (png/jpg/jpeg/webp/bmp/gif) in the directory and treats >= 2 images as "covers already exist", regardless of their filenames (封面-3比4 / 封面-4比3 / 封面 / cover / arbitrary names all count). Derive the 6+8 cover text from the approved 发布信息 title and the script's factual content — do not reuse the full 25-char title verbatim.
 
 ### 9. Validate and hand off
 

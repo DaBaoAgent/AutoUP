@@ -91,12 +91,15 @@ def main() -> int:
             skipped += 1
             continue
 
-        # 已有两张封面（3:4 + 4:3）→ 跳过，不需要提示词
+        # 已有封面 → 跳过。自主判断：目录中图片文件（png/jpg/jpeg/webp/bmp/gif）数量 >= 2
+        # 即视为已有两张封面（文件名可能为 封面-3比4 / 封面-4比3 / 封面 / cover 等任意命名）
         import glob as _glob
-        has_34 = _glob.glob(os.path.join(target, "封面-3比4.*"))
-        has_43 = _glob.glob(os.path.join(target, "封面-4比3.*"))
-        if has_34 and has_43:
-            print(f"跳过 第{i}行: 已有封面 3:4+4:3 → {os.path.basename(target)}", file=sys.stderr)
+        _IMG_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif")
+        cover_files = [p for p in _glob.glob(os.path.join(target, "*"))
+                       if os.path.splitext(p)[1].lower() in _IMG_EXTS]
+        if len(cover_files) >= 2:
+            names = ", ".join(os.path.basename(p) for p in sorted(cover_files))
+            print(f"跳过 第{i}行: 已有 {len(cover_files)} 张封面图 ({names}) → {os.path.basename(target)}", file=sys.stderr)
             skipped += 1
             continue
 
