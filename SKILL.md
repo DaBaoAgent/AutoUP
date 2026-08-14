@@ -9,6 +9,10 @@ Build a traceable pipeline from creator data to one ready-to-edit folder per doc
 
 Use `D:\自动剪辑` as the default working root. If the user does not provide a project directory, create a dedicated project subdirectory such as `D:\自动剪辑\AutoYY-YYYYMMDD-项目名`. Inspect but never reorganize, rename, or overwrite unrelated files already present in the working root.
 
+> **⚠️ 目录分工（2026-08-14 体检补充）**：
+> - **工作产出根 = `D:\自动剪辑`**：所有选题项目目录（`AutoYY-YYYYMMDD-选题名/`）、下载的视频/字幕/文案/封面都在这。
+> - **技能代码本体 = `D:\@kaifa\AutoYY`**（git 仓库 `DaBaoAgent/AutoYY`，SSH 443 同步）：本技能目录是指向它的 junction，SKILL.md/scripts/assets/vendor 的修改直接进 git。**不要**把工作产出放这里。
+
 ## Start
 
 1. Determine which stages the user requested: performance audit, topic planning, source research, authorized downloads, text production, cover generation, full pipeline, resume, or audit.
