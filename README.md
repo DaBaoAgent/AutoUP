@@ -39,6 +39,15 @@ python -m autoup.run --manifest 我的选题清单.txt --batch 第一批
 └── 验收报告.json        ← 14 项自动质检, 全过才算完成
 ```
 
+## 🎬 效果 Demo（全自动产出，未人工剪辑）
+
+以下三条成片全部由 AutoUP 一键生成：AI 文案 → 配音 → 影子匹配剪辑 → 硬字幕+BGM，全程零人工。点击即看。
+
+| 二战大西洋海战 | 监狱题材 | 自然纪录片 |
+|:---:|:---:|:---:|
+| [![二战](assets/demos/poster-ww2.webp)](assets/demos/demo-ww2.mp4) | [![监狱](assets/demos/poster-prison.webp)](assets/demos/demo-prison.mp4) | [![自然](assets/demos/poster-nature.webp)](assets/demos/demo-nature.mp4) |
+| ▶️ 点击播放 | ▶️ 点击播放 | ▶️ 点击播放 |
+
 ## ✨ 核心特性
 
 <div align="center">
