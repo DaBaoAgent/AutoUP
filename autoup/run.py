@@ -208,6 +208,7 @@ def main(argv: list[str] | None = None) -> None:
               r.get("error", ""))
     failed = [r for r in results if not r.get("passed")]
     print(f"\n完成: {len(results) - len(failed)}/{len(results)} 个选题通过验收")
+    sys.exit(1 if (results and len(failed) == len(results)) else 0)
 
 
 if __name__ == "__main__":
