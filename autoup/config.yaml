@@ -46,14 +46,14 @@ bgm:
   pick: "random"           # random | 具体文件名
 
 subtitle:
-  font: "Microsoft YaHei"
-  font_size: 64            # ASS PlayResY=1080 坐标系下的字号
+  font_path: "D:/@kaifa/AutoUP/assets/fonts/05_江西拙楷.ttf"   # 与封面同款手写体
+  font_size: 85            # ASS PlayResY=1080 坐标系; 15字≈画宽2/3
   primary_colour: "&H00FFFFFF"   # ASS 颜色为 &HAABBGGRR
   outline_colour: "&H00000000"
-  outline: 1.2
-  shadow: 0.8
+  outline: 2.0
+  shadow: 1.0
   margin_v: 60             # 距底边像素(底部偏上)
-  max_chars_per_line: 22
+  max_chars_per_line: 15   # 单行最多字数, 超长句自动分段轮显
 
 llm:
   base_url: "https://open.bigmodel.cn/api/paas/v4"

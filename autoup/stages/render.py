@@ -151,9 +151,68 @@ def _ass_time(t: float) -> str:
     return f"{h:d}:{m:02d}:{s:05.2f}"
 
 
+def _font_family(path: str) -> str:
+    """读字体内部 family 名, 供 ASS FontName 匹配(fontsdir)。"""
+    try:
+        from PIL import ImageFont
+        return ImageFont.truetype(path, 20).getname()[0]
+    except Exception:  # noqa: BLE001
+        return "Microsoft YaHei"
+
+
+def _stage_font(workdir: Path) -> Path:
+    """把字幕字体硬链/复制进工作目录(相对路径引用, 避开盘符冒号)。"""
+    import os
+    import shutil
+    src = Path(str(config.get("subtitle.font_path")
+                   or config.get("cover.font_path") or "C:/Windows/Fonts/simhei.ttf"))
+    fonts_dir = workdir / "fonts"
+    fonts_dir.mkdir(parents=True, exist_ok=True)
+    dst = fonts_dir / "subtitle.ttf"
+    if not dst.exists() or dst.stat().st_size != src.stat().st_size:
+        try:
+            os.link(src, dst)
+        except OSError:
+            shutil.copy(str(src), str(dst))
+    return fonts_dir
+
+
+def _split_lines(text: str, max_chars: int) -> list[str]:
+    """把句子切成 ≤max_chars 的行: 先按标点切段→段内去标点→打包; 超长段才硬切。
+    字幕内不保留任何标点(断句信息由换行和轮显节奏承担)。"""
+    import re as _re
+    PUNCT = "，。！？；：、,.!?;:…—“”‘’()（）[]【】《》<>\"'~～·"
+    phrases = [p for p in _re.split(r"[，。！？；：、,.!?;:…]", text) if p]
+    lines: list[str] = []
+    buf = ""
+    for raw in phrases:
+        ph = "".join(ch for ch in raw if ch not in PUNCT)
+        if not ph:
+            continue
+        while len(ph) > max_chars:          # 超长短语硬切
+            if buf:
+                lines.append(buf)
+                buf = ""
+            lines.append(ph[:max_chars])
+            ph = ph[max_chars:]
+        if len(buf) + len(ph) <= max_chars:
+            buf += ph
+        else:
+            if buf:
+                lines.append(buf)
+            buf = ph
+    if buf:
+        lines.append(buf)
+    return lines or [text]
+
+
 def build_ass(subs: list[dict], out: Path) -> Path:
-    """按 config.subtitle 生成 ASS(白字描边, 底部偏上)。"""
+    """按 config.subtitle 生成 ASS(封面同款手写体, 单行≤15字, 长句分段轮显)。"""
     st = config.get("subtitle", {}) or {}
+    font_path = str(st.get("font_path") or config.get("cover.font_path") or "C:/Windows/Fonts/simhei.ttf")
+    family = _font_family(font_path)
+    size = int(st.get("font_size", 85))
+    max_chars = int(st.get("max_chars_per_line", 15))
     header = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: {int(config.get('video.width', 1920))}
@@ -163,7 +222,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Narr,{st.get('font', 'Microsoft YaHei')},{int(st.get('font_size', 64))},{st.get('primary_colour', '&H00FFFFFF')},&H000000FF,{st.get('outline_colour', '&H00000000')},&H80000000,0,0,0,0,100,100,0,0,1,{float(st.get('outline', 1.2)) * 2:.1f},{st.get('shadow', 0.8)},2,60,60,{int(st.get('margin_v', 60))},1
+Style: Narr,{family},{size},{st.get('primary_colour', '&H00FFFFFF')},&H000000FF,{st.get('outline_colour', '&H00000000')},&H80000000,0,0,0,0,100,100,0,0,1,{float(st.get('outline', 2.0)) * 2:.1f},{st.get('shadow', 1.0)},2,60,60,{int(st.get('margin_v', 60))},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -171,7 +230,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     lines = [header]
     for s in subs:
         text = str(s["text"]).replace("\n", " ").replace("{", "(").replace("}", ")")
-        lines.append(f"Dialogue: 0,{_ass_time(s['start'])},{_ass_time(s['end'])},Narr,,0,0,0,,{text}\n")
+        chunks = _split_lines(text, max_chars)
+        total_chars = sum(len(c) for c in chunks) or 1
+        dur = max(float(s["end"]) - float(s["start"]), 0.4)
+        t = float(s["start"])
+        for ch in chunks:
+            dt = dur * len(ch) / total_chars
+            lines.append(f"Dialogue: 0,{_ass_time(t)},{_ass_time(t + dt)},Narr,,0,0,0,,{ch}\n")
+            t += dt
     out.write_text("".join(lines), encoding="utf-8")
     return out
 
@@ -237,7 +303,9 @@ def run(topic_dir: Path) -> Path:
     else:
         afilter = "[1:a]anull[aout]"
     # ass 滤镜参数含 Windows 盘符冒号会被解析器截断 → cwd=workdir 用相对路径
-    cmd += ["-filter_complex", f"[0:v]ass=subs.ass[v];{afilter}",
+    # 自定义字体未装系统 → fontsdir 指向工作目录内字体副本
+    fonts_dir = _stage_font(workdir)
+    cmd += ["-filter_complex", f"[0:v]ass=subs.ass:fontsdir={fonts_dir.name}[v];{afilter}",
             "-map", "[v]", "-map", "[aout]",
             "-c:v", codec, *codec_args, "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "192k",
