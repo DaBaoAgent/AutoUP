@@ -1,0 +1,74 @@
+# AutoUP 全局配置（唯一事实来源）
+paths:
+  ffmpeg: "D:/@佳康顺矩阵/@工具/ffmpeg/ffmpeg.exe"
+  ffprobe: "D:/@佳康顺矩阵/@工具/ffmpeg/ffprobe.exe"
+  gpt_sovits_root: "D:/@佳康顺矩阵/@工具/GPT-SoVITS"
+  output_root: "D:/AutoUP"
+
+video:
+  width: 1920
+  height: 1080
+  fps: 30
+  crf: 18
+  preset: "medium"
+  prefer_gpu: true        # NVENC 自动探测, 失败回退 libx264
+
+voice:
+  engine: "gpt_sovits"    # gpt_sovits | edge_tts
+  fallback_engine: "edge_tts"
+  gap_seconds: 0.3        # 句间自然停顿
+  gpt_sovits:
+    api: "http://127.0.0.1:9880/tts"
+    ping: "http://127.0.0.1:9880/ping"
+    text_lang: "zh"
+    prompt_lang: "zh"
+    speed_factor: 1.0
+    startup_timeout: 180
+    # config_yaml: ""       # 可选: api_v2 -c 参数(角色配置), 留空用默认
+    voices:
+      default:
+        ref_audio_path: ""   # 参考音频 wav 绝对路径
+        prompt_text: ""      # 参考音频对应文本
+      # documentary_male:
+      #   ref_audio_path: "D:/voices/narrator/demo.wav"
+      #   prompt_text: "参考音频的原文"
+  edge_tts:
+    voice: "zh-CN-YunjianNeural"
+    rate: "+0%"
+    volume: "+0%"
+
+bgm:
+  enabled: true
+  volume: 0.12             # 解说期间 BGM 音量(线性)
+  duck_ratio: 0.35         # 闪避深度: 压到原音量的 35%
+  fade_out_seconds: 3.0
+  directory: null          # null = 仓库 assets/bgm
+  pick: "random"           # random | 具体文件名
+
+subtitle:
+  font: "Microsoft YaHei"
+  font_size: 64            # ASS PlayResY=1080 坐标系下的字号
+  primary_colour: "&H00FFFFFF"   # ASS 颜色为 &HAABBGGRR
+  outline_colour: "&H00000000"
+  outline: 1.2
+  shadow: 0.8
+  margin_v: 60             # 距底边像素(底部偏上)
+  max_chars_per_line: 22
+
+llm:
+  base_url: "https://open.bigmodel.cn/api/paas/v4"
+  model: "glm-4.6"
+  temperature: 0.7
+  max_retries: 3
+  # api_key 从环境变量 GLM_API_KEY 或 %LOCALAPPDATA%/hermes/.env 读取, 不写入本文件
+
+script:
+  target_chars: 4500        # 成品解说词目标字数(AutoYY 标准 4500-5500)
+  tolerance: 0.12           # 字数验收容差
+  section_chars: 850        # 分段生成每段目标字数
+
+download:
+  min_duration: 1800        # S1 门禁: 时长 ≥ 30 分钟
+  min_height: 720           # S1 门禁: 最高分辨率 ≥ 720p
+  max_height: 1080          # 下载上限(成片统一 1080p)
+  proxy: ""                 # 留空用环境变量; 或填 "http://127.0.0.1:15715"
