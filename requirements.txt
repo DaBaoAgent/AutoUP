@@ -1,0 +1,6 @@
+yt-dlp>=2026.8.19
+pydub>=0.25.1
+Pillow>=10.0
+edge-tts>=7.0.0
+requests>=2.31
+PyYAML>=6.0
