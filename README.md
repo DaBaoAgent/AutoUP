@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 AutoUP — 纪录片解说全自动生产线
+  <img src="assets/readme/hero.webp" alt="AutoUP：纪录片解说全自动生产线" width="100%" />
 
 **一条命令，从 YouTube 片源到多平台发布就绪，全程零人工。**
 
@@ -41,6 +41,10 @@ python -m autoup.run --manifest 我的选题清单.txt --batch 第一批
 
 ## ✨ 核心特性
 
+<div align="center">
+  <img src="assets/readme/pipeline.webp" alt="AutoUP 全自动流水线：下载→文案→配音→匹配→剪辑→封面→发布" width="90%" />
+</div>
+
 - **🔗 全链路贯通** — 9 个阶段一条命令跑到底，中途失败自动断点续传，重跑同一命令即可接着来
 - **🧠 影子匹配剪辑** — 解说文案逐句对齐到原片镜头（基于字幕时间轴语义匹配 + 多重防幻觉护栏），不是乱剪是懂叙事地剪
 - **🎙️ 双配音引擎** — GPT-SoVITS 音色克隆（可配多音色）与 edge-tts 免费引擎自动切换，不配参考音频也能直接跑
@@ -68,6 +72,10 @@ python -m autoup.run --manifest urls.txt --batch myfirst
 
 > 📘 详细的配置说明（配音音色、封面字体、BGM 曲库、分辨率等）都在 **[autoup/config.yaml](autoup/config.yaml)** 注释里，每一项都有中文说明。
 > 📐 想了解架构和原理？看 [docs/requirements.md](docs/requirements.md)（产品设计）和 [docs/research-editing-pipeline.md](docs/research-editing-pipeline.md)（技术选型，源自对 NarratoAI / VideoLingo / MoneyPrinterTurbo 的源码级调研）。
+
+<div align="center">
+  <img src="assets/readme/one-command.webp" alt="一条命令出成片：python -m autoup.run" width="90%" />
+</div>
 
 ## 💰 关于收费：没有收费
 
