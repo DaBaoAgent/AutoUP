@@ -72,3 +72,6 @@ download:
   min_height: 720           # S1 门禁: 最高分辨率 ≥ 720p
   max_height: 1080          # 下载上限(成片统一 1080p)
   proxy: ""                 # 留空用环境变量; 或填 "http://127.0.0.1:15715"
+
+cover:
+  font_path: "D:/@kaifa/AutoUP/assets/fonts/05_江西拙楷.ttf"   # 手写广告体(免费商用), 备选清单见 assets/fonts/LICENSES.txt
