@@ -125,11 +125,16 @@ def run_batch(manifest: Path | None, batch: str, only: list[str] | None,
         log.info("续跑批次 %s: %d 个已有选题", batch, len(existing))
         for td in existing:
             state = _load_state(td)
-            url = state.get("url")
-            if url:
-                _ensure_downloaded(td, url, state, force)
-            report = process_topic(td, only, force, voice)
-            results.append({"topic": td.name, "passed": report["passed"]})
+            try:
+                url = state.get("url")
+                if url:
+                    _ensure_downloaded(td, url, state, force)
+                report = process_topic(td, only, force, voice)
+                results.append({"topic": td.name, "passed": report["passed"]})
+            except Exception as e:  # noqa: BLE001
+                log.error("选题 %s 失败: %s", td.name, e)
+                _mark(td, state, "error", f"failed: {str(e)[:200]}")
+                results.append({"topic": td.name, "passed": False, "error": str(e)[:200]})
         return results
 
     if manifest is None:

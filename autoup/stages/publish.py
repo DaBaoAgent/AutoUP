@@ -71,6 +71,13 @@ def run(topic_dir: Path) -> Path:
             "\n原 JSON:\n" + json.dumps(data, ensure_ascii=False), system=SYSTEM, temperature=0.3)
         data = {**data, **fix}
         problems = _validate(data)
+    # 硬兜底: 封面主/副标题超长时直接截断(保证 S8 排版规范)
+    cm = re.sub(r"[^\u4e00-\u9fff]", "", data.get("cover_main", ""))
+    cs = re.sub(r"[^\u4e00-\u9fff]", "", data.get("cover_sub", ""))
+    if len(cm) > 6:
+        data["cover_main"], problems = cm[:6], problems + ["主标题硬截断为6字"]
+    if len(cs) > 8:
+        data["cover_sub"], problems = cs[:8], problems + ["副标题硬截断为8字"]
 
     pub = topic_dir / "发布"
     pub.mkdir(parents=True, exist_ok=True)

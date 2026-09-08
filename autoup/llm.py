@@ -62,7 +62,7 @@ def chat(prompt: str, system: str = "", json_mode: bool = False,
         except (requests.RequestException, KeyError, ValueError) as e:
             last_err = str(e)
         log.warning("LLM 第 %d/%d 次失败: %s", attempt, retries, last_err)
-        time.sleep(min(2 ** attempt * 2, 30))
+        time.sleep(min(2 ** attempt * 3, 60))
     raise RuntimeError(f"LLM 调用失败(重试 {retries} 次): {last_err}")
 
 

@@ -100,15 +100,18 @@ def run(topic_dir: Path) -> Path:
         cnt = _count(full)
         log.info("补写 %d 字, 现 %d 字", _count(add), cnt)
     if cnt > hi:
-        # 截到最后一个句号且不低于下限
-        cut = full
-        while _count(cut) > hi:
-            idx = max(cut.rfind("。"), cut.rfind("！"), cut.rfind("？"))
-            if idx <= 0:
+        # 单遍扫描句读边界, 取字数 ≤ 上限的最长句号前缀; 无则硬切(避免死循环)
+        best_end = None
+        for m in re.finditer(r"[。！？]", full):
+            if _count(full[:m.end()]) <= hi:
+                best_end = m.end()
+            else:
                 break
-            cut = cut[:idx + 1]
-        if _count(cut) >= lo:
-            full = cut
+        if best_end:
+            cut = full[:best_end]
+        else:
+            cut = full[:hi - 1].rstrip() + "。"
+        full = cut
         log.warning("文案超上限, 截至约 %d 字(如需更长请调高 script.target_chars)", _count(full))
 
     # 清洗: 合并多余空行, 去生产标签
