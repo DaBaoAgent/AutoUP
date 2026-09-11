@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/readme/hero.webp" alt="AutoUP：从片源到发布就绪的纪录片视频流水线" width="100%" />
+<img src="assets/readme/hero-20260912.webp" alt="AutoUP：从片源到发布就绪的纪录片视频流水线" width="100%" />
 
 # AutoUP
 
@@ -59,7 +59,7 @@ python -m autoup.run --manifest urls.txt --batch 20260911-A
 
 ### 一条流水线，但每一步都能检查
 
-<img src="assets/readme/pipeline.webp" alt="AutoUP 六个核心阶段：素材、文案、配音、匹配、剪辑、交付" width="100%" />
+<img src="assets/readme/pipeline-20260912.webp" alt="AutoUP 六个核心阶段：素材、文案、配音、匹配、剪辑、交付" width="100%" />
 
 - **片源先核验**：时长、最高分辨率、英文字幕不达标就拒单，避免下载后才发现无法生产。
 - **文案以字幕为事实边界**：基于原片字幕生成中文解说，降低人名、数字和事件被凭空补写的风险。
@@ -138,7 +138,7 @@ flowchart LR
   I --> J[S9 自动验收]
 ```
 
-<img src="assets/readme/one-command.webp" alt="一条命令从输入到视频交付包" width="100%" />
+<img src="assets/readme/one-command-20260912.webp" alt="一条命令从输入到视频交付包" width="100%" />
 
 ## 配置重点
 
