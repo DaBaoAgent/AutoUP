@@ -8,6 +8,7 @@ script.target_chars 或提高 voice.gpt_sovits.speed_factor / edge 语速。
 from __future__ import annotations
 
 import logging
+import math
 import re
 from pathlib import Path
 
@@ -65,7 +66,8 @@ def run(topic_dir: Path) -> Path:
     target = int(config.get("script.target_chars", 4500))
     tolerance = float(config.get("script.tolerance", 0.12))
     seg_size = int(config.get("script.section_chars", 850))
-    total_parts = max(1, round(target / seg_size))
+    # 向上取整，避免 round() 在目标字数刚好跨过分段边界时少生成一段。
+    total_parts = max(1, math.ceil(target / seg_size))
     srt_text = _srt_text(srt_path)
     topic = topic_dir.name
 

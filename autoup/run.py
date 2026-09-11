@@ -36,8 +36,47 @@ def _save_state(topic_dir: Path, state: dict) -> None:
     utils.write_json(topic_dir / "state.json", state)
 
 
-def _stage_done(state: dict, stage: str, force: bool) -> bool:
-    return not force and state.get("stages", {}).get(stage) == "done"
+def _stage_artifacts_ok(topic_dir: Path, stage: str) -> bool:
+    """检查阶段的最小产物，避免 state.json 与磁盘脱节后错误跳过。"""
+    checks = {
+        "s2": lambda: (topic_dir / "字幕" / "字幕.srt").exists()
+        and any(f.suffix.lower() in {".mp4", ".mkv", ".webm"}
+                for f in (topic_dir / "素材").glob("高清源视频.*")),
+        "s3": lambda: (topic_dir / "文案" / "爆款口播稿.txt").exists()
+        and (topic_dir / "文案" / "爆款口播稿.txt").stat().st_size > 0,
+        "s4": lambda: _timing_artifacts_ok(topic_dir),
+        "s5": lambda: bool((utils.read_json(topic_dir / "edit_decision.json") or {}).get("items")),
+        "s6": lambda: (topic_dir / "成片.mp4").exists()
+        and (topic_dir / "成片.mp4").stat().st_size > 1_000_000,
+        "s7": lambda: all((topic_dir / "发布" / name).exists()
+                           for name in ("国内平台.txt", "海外平台.txt")),
+        "s8": lambda: all((topic_dir / "封面" / f"封面-{name}.png").exists()
+                           for name in ("9x16", "16x9", "1x1")),
+        "s9": lambda: (topic_dir / "验收报告.json").exists(),
+    }
+    try:
+        return checks.get(stage, lambda: True)()
+    except OSError:
+        return False
+
+
+def _timing_artifacts_ok(topic_dir: Path) -> bool:
+    timing = utils.read_json(topic_dir / "配音" / "timing.json") or {}
+    sentences = timing.get("sentences", [])
+    return bool(sentences) and all(
+        (topic_dir / "配音" / str(item.get("audio", ""))).exists()
+        and (topic_dir / "配音" / str(item.get("audio", ""))).stat().st_size > 1024
+        for item in sentences
+    )
+
+
+def _stage_done(topic_dir: Path, state: dict, stage: str, force: bool) -> bool:
+    if force or state.get("stages", {}).get(stage) != "done":
+        return False
+    if not _stage_artifacts_ok(topic_dir, stage):
+        log.warning("%s 已标记完成但产物不完整，将重新执行", stage.upper())
+        return False
+    return True
 
 
 def _mark(topic_dir: Path, state: dict, stage: str, status: str = "done") -> None:
@@ -70,7 +109,7 @@ def process_topic(topic_dir: Path, only: list[str] | None, force: bool, voice: s
     stages = only or STAGES
 
     def todo(stage: str) -> bool:
-        return stage in stages and not _stage_done(state, stage, force)
+        return stage in stages and not _stage_done(topic_dir, state, stage, force)
 
     if todo("s3"):
         script.run(topic_dir)
@@ -97,7 +136,7 @@ def process_topic(topic_dir: Path, only: list[str] | None, force: bool, voice: s
 
 def _ensure_downloaded(td: Path, url: str, state: dict, force: bool) -> None:
     """S2 幂等: 视频+字幕齐则标记完成, 缺则(续)下载。"""
-    if _stage_done(state, "s2", force):
+    if _stage_done(td, state, "s2", force):
         return
     mat = td / "素材"
     has_video = mat.exists() and any(
@@ -199,8 +238,12 @@ def main(argv: list[str] | None = None) -> None:
         node[parts[-1]] = val
         log.info("配置覆盖: %s = %r", key, val)
 
+    only = [s.strip().lower() for s in args.only.split(",")] if args.only else None
+    invalid = sorted(set(only or []) - set(STAGES))
+    if invalid:
+        ap.error(f"未知阶段: {', '.join(invalid)}；可选值: {', '.join(STAGES)}")
     results = run_batch(args.manifest, args.batch,
-                        [s.strip() for s in args.only.split(",")] if args.only else None,
+                        only,
                         args.force, args.voice, args.limit)
     print("\n===== 批次结果 =====")
     for r in results:
