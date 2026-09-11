@@ -59,17 +59,17 @@ python -m autoup.run --manifest urls.txt --batch 20260911-A
   <tr>
     <td align="center">
       <video controls playsinline preload="metadata" width="100%" poster="assets/demos/poster-ww2.webp">
-        <source src="assets/demos/demo-ww2.mp4" type="video/mp4" />
+        <source src="https://raw.githubusercontent.com/DaBaoAgent/AutoUP/main/assets/demos/demo-ww2.mp4" type="video/mp4" />
       </video>
     </td>
     <td align="center">
       <video controls playsinline preload="metadata" width="100%" poster="assets/demos/poster-prison.webp">
-        <source src="assets/demos/demo-prison.mp4" type="video/mp4" />
+        <source src="https://raw.githubusercontent.com/DaBaoAgent/AutoUP/main/assets/demos/demo-prison.mp4" type="video/mp4" />
       </video>
     </td>
     <td align="center">
       <video controls playsinline preload="metadata" width="100%" poster="assets/demos/poster-nature.webp">
-        <source src="assets/demos/demo-nature.mp4" type="video/mp4" />
+        <source src="https://raw.githubusercontent.com/DaBaoAgent/AutoUP/main/assets/demos/demo-nature.mp4" type="video/mp4" />
       </video>
     </td>
   </tr>
