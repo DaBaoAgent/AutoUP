@@ -4,7 +4,7 @@
 
 # AutoUP
 
-### 给一份 YouTube 片源清单，自动产出纪录片解说成片
+### 给一份片源清单，自动产出纪录片解说成片
 
 核验片源 → 下载高清素材 → 生成中文口播 → 配音 → 影子匹配 → 自动剪辑 → 字幕+BGM → 发布资料 → 三比例封面 → 验收
 
@@ -12,11 +12,19 @@
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-required-007808?logo=ffmpeg&logoColor=white)](https://ffmpeg.org/)
 [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](LICENSE)
 
-**本地运行 · 中间产物留档 · 失败可续跑 · 交付前自动验收**
+**纯开源 · 完全免费 · 本地运行 · 中间产物留档 · 失败可续跑**
 
 </div>
 
-> AutoUP 是面向纪录片解说创作者的本地化内容生产流水线。它负责把片源、字幕、文案、配音、画面和发布资料串成一条可复跑的生产线；最终发布动作仍由你在对应平台完成。
+> 如果你是从视频、文章或朋友分享过来的，欢迎先把项目 Star 起来，再按下面的说明试跑一次。AutoUP 是一个纯开源、完全免费的纪录片解说生产工具：把片源、字幕、文案、配音、画面和发布资料串成一条可复跑的流程，最终发布动作仍由你在对应平台完成。
+
+## 给刚来的朋友
+
+这个项目不设会员、不锁功能，也不要求付费才能使用。代码和说明都在仓库里，任何人都可以直接克隆下来，按 [`SKILL.md`](SKILL.md) 和 [`autoup/config.yaml`](autoup/config.yaml) 配好环境后运行。
+
+如果你会一点 Python 和命令行，照着“快速开始”基本就能跑起来；遇到环境、配置或某个阶段报错，也可以先看 [`docs/dev-notes.md`](docs/dev-notes.md)，再提 Issue。项目还在持续迭代，真实反馈比一句“挺好用”更能帮它变得可靠。
+
+如果你暂时不会部署、不会使用，或者想按自己的业务做定制，也可以联系作者。项目本身不收费；部署指导、使用陪跑和定制开发属于作者提供的有偿服务，按你的情况一对一沟通，教会为止，不会把基础功能故意锁起来再收费。
 
 ## 你会得到什么
 
@@ -81,6 +89,8 @@ python -m autoup.run --manifest urls.txt --batch 20260911-A
     <td align="center">点击播放按钮观看</td>
   </tr>
 </table>
+
+想先试试效果，可以直接点击上面的播放按钮；想自己跑起来，继续看下面的三步即可。
 
 ## 为什么是 AutoUP
 
@@ -209,6 +219,32 @@ flowchart LR
 欢迎提交 Issue、改进文档或发起 Pull Request。使用前请先阅读 [`SKILL.md`](SKILL.md) 与项目文档。
 
 本项目采用 [MIT License](LICENSE)。
+
+## 联系作者
+
+项目免费开源，使用过程中有问题欢迎交流。请在联系时顺手说明：你的系统环境、卡在哪一步、完整报错截图或日志；这样通常能更快定位问题。
+
+<table>
+  <tr>
+    <td align="center"><strong>微信</strong></td>
+    <td align="center"><strong>Telegram</strong></td>
+    <td align="center"><strong>WhatsApp</strong></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/contact/wechat.jpg" alt="微信二维码" width="220" /></td>
+    <td align="center"><img src="assets/contact/telegram.jpg" alt="Telegram 联系二维码" width="220" /></td>
+    <td align="center"><img src="assets/contact/whatsapp.jpg" alt="WhatsApp 联系二维码" width="220" /></td>
+  </tr>
+  <tr>
+    <td align="center">扫码添加</td>
+    <td align="center"><code>@DABAOAGENT001</code></td>
+    <td align="center"><code>DabaoAgent</code></td>
+  </tr>
+</table>
+
+邮箱：<a href="mailto:xxx139139@gmail.com">xxx139139@gmail.com</a>
+
+不会部署、想有人带着跑通，或者有定制需求，都可以来聊。能在开源仓库里解决的问题，我会尽量公开回答；需要一对一服务的，再单独约时间和费用。
 
 <div align="center">
 
