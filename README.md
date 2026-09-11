@@ -50,6 +50,8 @@ python -m autoup.run --manifest urls.txt --batch 20260911-A
 
 以下 Demo 都是 AutoUP 流程产出的成片：
 
+> GitHub README 会过滤仓库内 MP4 的 `<video>` 控件，因此这里采用兼容性更好的“海报预览 + 原生播放器直链”：点击海报中央的播放按钮，即可打开并播放样片。
+
 <table>
   <tr>
     <th>二战纪录片</th>
@@ -58,19 +60,19 @@ python -m autoup.run --manifest urls.txt --batch 20260911-A
   </tr>
   <tr>
     <td align="center">
-      <video controls playsinline preload="metadata" width="100%" poster="assets/demos/poster-ww2.webp">
-        <source src="https://raw.githubusercontent.com/DaBaoAgent/AutoUP/main/assets/demos/demo-ww2.mp4" type="video/mp4" />
-      </video>
+      <a href="https://raw.githubusercontent.com/DaBaoAgent/AutoUP/main/assets/demos/demo-ww2.mp4">
+        <img src="assets/demos/poster-ww2-play.webp" alt="二战纪录片：点击播放样片" width="100%" />
+      </a>
     </td>
     <td align="center">
-      <video controls playsinline preload="metadata" width="100%" poster="assets/demos/poster-prison.webp">
-        <source src="https://raw.githubusercontent.com/DaBaoAgent/AutoUP/main/assets/demos/demo-prison.mp4" type="video/mp4" />
-      </video>
+      <a href="https://raw.githubusercontent.com/DaBaoAgent/AutoUP/main/assets/demos/demo-prison.mp4">
+        <img src="assets/demos/poster-prison-play.webp" alt="监狱纪录片：点击播放样片" width="100%" />
+      </a>
     </td>
     <td align="center">
-      <video controls playsinline preload="metadata" width="100%" poster="assets/demos/poster-nature.webp">
-        <source src="https://raw.githubusercontent.com/DaBaoAgent/AutoUP/main/assets/demos/demo-nature.mp4" type="video/mp4" />
-      </video>
+      <a href="https://raw.githubusercontent.com/DaBaoAgent/AutoUP/main/assets/demos/demo-nature.mp4">
+        <img src="assets/demos/poster-nature-play.webp" alt="自然纪录片：点击播放样片" width="100%" />
+      </a>
     </td>
   </tr>
   <tr>
