@@ -50,10 +50,35 @@ python -m autoup.run --manifest urls.txt --batch 20260911-A
 
 以下 Demo 都是 AutoUP 流程产出的成片：
 
-| 二战纪录片 | 监狱纪录片 | 自然纪录片 |
-|:---:|:---:|:---:|
-| [![二战纪录片](assets/demos/poster-ww2.webp)](assets/demos/demo-ww2.mp4) | [![监狱纪录片](assets/demos/poster-prison.webp)](assets/demos/demo-prison.mp4) | [![自然纪录片](assets/demos/poster-nature.webp)](assets/demos/demo-nature.mp4) |
-| 点击海报播放 | 点击海报播放 | 点击海报播放 |
+<table>
+  <tr>
+    <th>二战纪录片</th>
+    <th>监狱纪录片</th>
+    <th>自然纪录片</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <video controls playsinline preload="metadata" width="100%" poster="assets/demos/poster-ww2.webp">
+        <source src="assets/demos/demo-ww2.mp4" type="video/mp4" />
+      </video>
+    </td>
+    <td align="center">
+      <video controls playsinline preload="metadata" width="100%" poster="assets/demos/poster-prison.webp">
+        <source src="assets/demos/demo-prison.mp4" type="video/mp4" />
+      </video>
+    </td>
+    <td align="center">
+      <video controls playsinline preload="metadata" width="100%" poster="assets/demos/poster-nature.webp">
+        <source src="assets/demos/demo-nature.mp4" type="video/mp4" />
+      </video>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">点击播放按钮观看</td>
+    <td align="center">点击播放按钮观看</td>
+    <td align="center">点击播放按钮观看</td>
+  </tr>
+</table>
 
 ## 为什么是 AutoUP
 
