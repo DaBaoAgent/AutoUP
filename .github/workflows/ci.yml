@@ -8,7 +8,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   quality:
@@ -19,33 +19,16 @@ jobs:
         with:
           python-version: "3.11"
           enable-cache: true
-      - name: Resolve dependencies
-        run: uv lock
+      - name: Verify lockfile
+        run: uv lock --check
       - name: Install
-        run: uv sync --all-extras
+        run: uv sync --all-extras --locked
       - name: Compile
         run: uv run python -m compileall -q autoup tests
       - name: Ruff
         run: uv run ruff check autoup tests
       - name: Tests
         run: uv run pytest -q --cov=autoup --cov-report=term-missing --cov-report=xml
-      - name: Commit generated lockfile
-        if: success() && github.event_name == 'push' && github.ref_name == 'refactor/phase1-5-cleanup'
-        run: |
-          git add uv.lock
-          if ! git diff --cached --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "build: lock dependencies"
-            git push
-          fi
-      - name: Upload lockfile
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: uv-lock
-          path: uv.lock
-          if-no-files-found: error
 
   windows-smoke:
     runs-on: windows-latest
@@ -56,6 +39,6 @@ jobs:
           python-version: "3.11"
           enable-cache: true
       - name: Install
-        run: uv sync --all-extras
+        run: uv sync --all-extras --locked
       - name: Smoke tests
         run: uv run pytest -q tests/test_smoke.py tests/test_config.py tests/test_utils.py
