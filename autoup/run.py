@@ -4,13 +4,13 @@ from __future__ import annotations
 import argparse
 import logging
 import re
-import sys
 import time
 import traceback
 from pathlib import Path
 from time import perf_counter
 
-from . import config, state as stage_state, utils
+from . import config, utils
+from . import state as stage_state
 from .stages import cover, download, dub, match, publish, render, script, validate
 
 log = logging.getLogger("autoup.run")
