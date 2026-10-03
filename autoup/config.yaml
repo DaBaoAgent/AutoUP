@@ -1,9 +1,10 @@
-# AutoUP 全局配置（唯一事实来源）
+# AutoUP 默认配置（可跨机器直接提交）。
+# 本机路径请写到 autoup/config.local.yaml（已加入 .gitignore）或使用 AUTOUP_* 环境变量。
 paths:
-  ffmpeg: "D:/@佳康顺矩阵/@工具/ffmpeg/ffmpeg.exe"
-  ffprobe: "D:/@佳康顺矩阵/@工具/ffmpeg/ffprobe.exe"
-  gpt_sovits_root: "D:/@佳康顺矩阵/@工具/GPT-SoVITS"
-  output_root: "D:/AutoUP"
+  ffmpeg: "ffmpeg"
+  ffprobe: "ffprobe"
+  gpt_sovits_root: ""
+  output_root: "output"
 
 video:
   width: 1920
@@ -11,12 +12,12 @@ video:
   fps: 30
   crf: 18
   preset: "medium"
-  prefer_gpu: true        # NVENC 自动探测, 失败回退 libx264
+  prefer_gpu: true
 
 voice:
-  engine: "gpt_sovits"    # gpt_sovits | edge_tts
+  engine: "gpt_sovits"
   fallback_engine: "edge_tts"
-  gap_seconds: 0.3        # 句间自然停顿
+  gap_seconds: 0.3
   gpt_sovits:
     api: "http://127.0.0.1:9880/tts"
     ping: "http://127.0.0.1:9880/ping"
@@ -24,14 +25,10 @@ voice:
     prompt_lang: "zh"
     speed_factor: 1.0
     startup_timeout: 180
-    # config_yaml: ""       # 可选: api_v2 -c 参数(角色配置), 留空用默认
     voices:
       default:
-        ref_audio_path: ""   # 参考音频 wav 绝对路径
-        prompt_text: ""      # 参考音频对应文本
-      # documentary_male:
-      #   ref_audio_path: "D:/voices/narrator/demo.wav"
-      #   prompt_text: "参考音频的原文"
+        ref_audio_path: ""
+        prompt_text: ""
   edge_tts:
     voice: "zh-CN-YunjianNeural"
     rate: "+0%"
@@ -39,39 +36,50 @@ voice:
 
 bgm:
   enabled: true
-  volume: 0.12             # 解说期间 BGM 音量(线性)
-  duck_ratio: 0.35         # 闪避深度: 压到原音量的 35%
+  volume: 0.12
+  duck_ratio: 0.35
   fade_out_seconds: 3.0
-  directory: null          # null = 仓库 assets/bgm
-  pick: "random"           # random | 具体文件名
+  directory: null
+  pick: "random"
 
 subtitle:
-  font_path: "D:/@kaifa/AutoUP/assets/fonts/05_江西拙楷.ttf"   # 与封面同款手写体
-  font_size: 85            # ASS PlayResY=1080 坐标系; 15字≈画宽2/3
-  primary_colour: "&H00FFFFFF"   # ASS 颜色为 &HAABBGGRR
+  font_path: "assets/fonts/05_江西拙楷.ttf"
+  font_size: 85
+  primary_colour: "&H00FFFFFF"
   outline_colour: "&H00000000"
   outline: 2.0
   shadow: 1.0
-  margin_v: 60             # 距底边像素(底部偏上)
-  max_chars_per_line: 15   # 单行最多字数, 超长句自动分段轮显
+  margin_v: 60
+  max_chars_per_line: 15
 
 llm:
   base_url: "https://open.bigmodel.cn/api/paas/v4"
   model: "glm-4.6"
   temperature: 0.7
   max_retries: 3
-  # api_key 从环境变量 GLM_API_KEY 或 %LOCALAPPDATA%/hermes/.env 读取, 不写入本文件
+  max_tokens: 8192
 
 script:
-  target_chars: 4500        # 成品解说词目标字数(AutoYY 标准 4500-5500)
-  tolerance: 0.12           # 字数验收容差
-  section_chars: 850        # 分段生成每段目标字数
+  target_chars: 4500
+  tolerance: 0.12
+  section_chars: 850
+  supplement_rounds: 2
+
+match:
+  batch_sentences: 6
+  window_overlap: 0.15
+  max_context_chars: 14000
+  repair_attempts: 2
+
+publish:
+  repair_attempts: 2
 
 download:
-  min_duration: 1800        # S1 门禁: 时长 ≥ 30 分钟
-  min_height: 720           # S1 门禁: 最高分辨率 ≥ 720p
-  max_height: 1080          # 下载上限(成片统一 1080p)
-  proxy: ""                 # 留空用环境变量; 或填 "http://127.0.0.1:15715"
+  min_duration: 1800
+  min_height: 720
+  max_height: 1080
+  proxy: ""
+  verify_workers: 4
 
 cover:
-  font_path: "D:/@kaifa/AutoUP/assets/fonts/05_江西拙楷.ttf"   # 手写广告体(免费商用), 备选清单见 assets/fonts/LICENSES.txt
+  font_path: "assets/fonts/05_江西拙楷.ttf"

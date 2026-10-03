@@ -10,7 +10,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-required-007808?logo=ffmpeg&logoColor=white)](https://ffmpeg.org/)
-[![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](LICENSE)\n[![CI](https://github.com/DaBaoAgent/AutoUP/actions/workflows/ci.yml/badge.svg)](https://github.com/DaBaoAgent/AutoUP/actions/workflows/ci.yml)
 
 **纯开源 · 完全免费 · 本地运行 · 中间产物留档 · 失败可续跑**
 
@@ -118,15 +118,11 @@ python -m autoup.run --manifest urls.txt --batch 20260911-A
 ```bash
 git clone https://github.com/DaBaoAgent/AutoUP.git
 cd AutoUP
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS / Linux
-# source .venv/bin/activate
-pip install -r requirements.txt
+# 安装 uv 后：
+uv sync --all-extras --locked
 ```
 
-准备 **Python 3.11+**、**FFmpeg/ffprobe**，并确认它们可以被程序找到。首次使用前，打开 [`autoup/config.yaml`](autoup/config.yaml)，按本机环境调整路径和参数。
+准备 **Python 3.11+**、**FFmpeg/ffprobe**，并确认它们可以被程序找到。仓库默认配置保持可移植；需要本机绝对路径时，把 [`autoup/config.example.yaml`](autoup/config.example.yaml) 复制为 `autoup/config.local.yaml` 后修改。该文件已被 `.gitignore` 忽略。
 
 ### 2. 配置模型 Key
 
@@ -158,7 +154,7 @@ python -m autoup.run --batch 20260911-A --only s8 --force
 python -m autoup.run --manifest urls.txt --batch smoke --limit 2
 ```
 
-同一批次再次运行时会读取 `state.json`。阶段状态和关键产物都会被核对，文件被删掉或不完整时会自动重新执行该阶段。
+同一批次再次运行时会读取 `state.json`。每个阶段保存输入/配置 fingerprint 与耗时；只有状态、产物和 fingerprint 全部一致才会复用。修改上游文案、音色、模型或渲染配置后，受影响阶段会自动失效并重跑。
 
 ## 生产流程
 
@@ -179,7 +175,7 @@ flowchart LR
 
 ## 配置重点
 
-所有默认值集中在 [`autoup/config.yaml`](autoup/config.yaml)：
+所有**可移植默认值**集中在 [`autoup/config.yaml`](autoup/config.yaml)，本机覆盖写入 `autoup/config.local.yaml`：
 
 | 配置 | 作用 |
 |---|---|
@@ -197,7 +193,18 @@ flowchart LR
 - [`docs/requirements.md`](docs/requirements.md)：产品规则与验收标准
 - [`docs/research-editing-pipeline.md`](docs/research-editing-pipeline.md)：剪辑策略与技术选型
 - [`docs/dev-notes.md`](docs/dev-notes.md)：开发记录与已知问题
-- [`autoup/config.yaml`](autoup/config.yaml)：唯一配置事实来源
+- [`autoup/config.yaml`](autoup/config.yaml)：可移植默认配置\n- [`autoup/config.example.yaml`](autoup/config.example.yaml)：本机覆盖示例\n- [`pyproject.toml`](pyproject.toml) / `uv.lock`：依赖与可复现环境\n- [`tests/`](tests/) / [`.github/workflows/ci.yml`](.github/workflows/ci.yml)：测试与 CI 门禁
+
+## 开发与质量门禁
+
+```bash
+uv sync --all-extras --locked
+uv run python -m compileall -q autoup tests
+uv run ruff check autoup tests
+uv run pytest -q --cov=autoup --cov-report=term-missing
+```
+
+CI 在 Linux 执行完整 lint/test/coverage，在 Windows 执行安装和核心 smoke test。完整交付以 S9 验收和 CI 同时通过为准。
 
 ## 适用边界与合规
 
@@ -210,7 +217,7 @@ flowchart LR
 - [x] 字幕驱动的影子匹配与 FFmpeg 渲染
 - [x] 国内/海外发布资料与三比例封面
 - [x] 交付前自动验收
-- [ ] 更丰富的本地素材输入与镜头策略
+- [x] 阶段 fingerprint 断点失效与耗时 metrics\n- [x] Ruff + pytest + 70% coverage + Linux/Windows CI\n- [ ] 更丰富的本地素材输入与镜头策略
 - [ ] 可视化任务面板与失败阶段重试
 - [ ] 更多字幕语言和可插拔 TTS 引擎
 
