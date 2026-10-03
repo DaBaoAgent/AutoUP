@@ -1,4 +1,4 @@
-"""阶段输入指纹：让断点续跑能识别上游内容或配置变化。"""
+"""阶段输入指纹：让断点续跑能识别上游内容、模型参数或本机资源变化。"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -17,7 +17,10 @@ def _first_video(topic_dir: Path) -> Path | None:
     material = topic_dir / "素材"
     if not material.exists():
         return None
-    return next((p for p in material.glob("高清源视频.*") if p.suffix.lower() in VIDEO_EXTS), None)
+    return next(
+        (path for path in material.glob("高清源视频.*") if path.suffix.lower() in VIDEO_EXTS),
+        None,
+    )
 
 
 def _llm_descriptor() -> dict[str, Any]:
@@ -26,6 +29,7 @@ def _llm_descriptor() -> dict[str, Any]:
         "model": config.get("llm.model"),
         "temperature": config.get("llm.temperature"),
         "max_retries": config.get("llm.max_retries"),
+        "max_tokens": config.get("llm.max_tokens"),
     }
 
 
@@ -33,25 +37,46 @@ def _cfg(*keys: str) -> dict[str, Any]:
     return {key: config.get(key) for key in keys}
 
 
-def stage_fingerprint(topic_dir: Path, stage: str, *, voice: str = "default", url: str = "") -> str:
+def _voice_reference(voice: str) -> dict[str, Any] | None:
+    raw = config.get(f"voice.gpt_sovits.voices.{voice}.ref_audio_path")
+    if not raw:
+        return None
+    path = Path(str(raw)).expanduser()
+    return _sig(path) if path.exists() else {"exists": False, "path": str(path)}
+
+
+def stage_fingerprint(
+    topic_dir: Path,
+    stage: str,
+    *,
+    voice: str = "default",
+    url: str = "",
+) -> str:
     topic_dir = Path(topic_dir)
     subtitle = topic_dir / "字幕" / "字幕.srt"
     script = topic_dir / "文案" / "爆款口播稿.txt"
     timing = topic_dir / "配音" / "timing.json"
     edit = topic_dir / "edit_decision.json"
     video = _first_video(topic_dir)
-    payload: dict[str, Any] = {"version": 1, "stage": stage}
+    payload: dict[str, Any] = {"version": 2, "stage": stage}
 
     if stage == "s2":
         payload.update({"url": url, "config": _cfg("download")})
     elif stage == "s3":
-        payload.update({"subtitle": _sig(subtitle), "config": _cfg("script"), "llm": _llm_descriptor()})
+        payload.update(
+            {
+                "subtitle": _sig(subtitle),
+                "config": _cfg("script"),
+                "llm": _llm_descriptor(),
+            }
+        )
     elif stage == "s4":
         payload.update(
             {
                 "script": _sig(script),
                 "voice_name": voice,
                 "config": _cfg("voice"),
+                "reference_audio": _voice_reference(voice),
             }
         )
     elif stage == "s5":
@@ -73,7 +98,13 @@ def stage_fingerprint(topic_dir: Path, stage: str, *, voice: str = "default", ur
             }
         )
     elif stage == "s7":
-        payload.update({"script": _sig(script), "llm": _llm_descriptor()})
+        payload.update(
+            {
+                "script": _sig(script),
+                "config": _cfg("publish"),
+                "llm": _llm_descriptor(),
+            }
+        )
     elif stage == "s8":
         payload.update(
             {

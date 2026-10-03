@@ -71,6 +71,9 @@ match:
   max_context_chars: 14000
   repair_attempts: 2
 
+publish:
+  repair_attempts: 2
+
 download:
   min_duration: 1800
   min_height: 720
