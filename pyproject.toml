@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "autoup"
+version = "0.2.0"
+description = "Lightweight documentary narration automation pipeline"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+  "yt-dlp>=2026.8.19",
+  "pydub>=0.25.1",
+  "Pillow>=10.0",
+  "edge-tts>=7.0.0",
+  "requests>=2.31",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "pytest-cov>=6.0",
+  "ruff>=0.12",
+]
+
+[project.scripts]
+autoup = "autoup.run:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["autoup"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+extend-exclude = ["assets", "docs", "github", "vendor"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["autoup"]
+omit = [
+  "autoup/tts/edge.py",
+  "autoup/tts/gpt_sovits.py",
+  "autoup/stages/font_preview.py",
+]
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
+skip_covered = true
