@@ -1,85 +1,57 @@
-# Workflow specification
+# AutoUP workflow specification
 
-## Contents
+## S1-S9 stage gates
 
-- Stage gates
-- Manifest schema
-- Performance audit fields
-- Topic scoring
-- Source acceptance
-- Folder acceptance
-- Batch handoff
+| Stage | Input | Output | Hard gate |
+|---|---|---|---|
+| S1 source verify | URL manifest | verification CSV | duration, resolution and English subtitle availability pass |
+| S2 download | approved URL | source video + `字幕/字幕.srt` | real playable video and selected subtitle exist |
+| S3 script | SRT | `文案/爆款口播稿.txt` + `script_map.json` | every generated section is grounded in its subtitle window and target length passes |
+| S4 dub | script | sentence WAVs + `timing.json` | every sentence audio exists and carries an input fingerprint |
+| S5 match | SRT + timing | `edit_decision.json` | one semantic picture segment per sentence, all covered, chronological, non-overlapping |
+| S6 render | source + timing + edit decision | `成片.mp4` | complete S5 mapping required; video/audio/subtitle render succeeds |
+| S7 publication | script | CN/EN publication files + cover copy | strict format validation passes; otherwise fail closed |
+| S8 cover | source + edit decision + cover copy | 9:16 / 16:9 / 1:1 PNGs | exact 6/8-character cover copy and exact pixel dimensions |
+| S9 validate | all outputs | `验收报告.json` | every delivery contract passes |
 
-## Stage gates
+## Resume semantics
 
-1. **Audit complete:** every readable screenshot is processed, overlap is removed, missing values stay blank.
-2. **Topic approved:** the topic has a clear audience promise and an evidence-backed score.
-3. **Source approved:** URL, metadata, duration, resolution, content match, subtitle status, and rights note are verified.
-4. **Media ready:** a playable HD source and an SRT exist, or the topic is explicitly marked blocked.
-5. **Text ready:** the script is grounded, speakable, within target length, has completed the bundled Humanizer Embedded-mode pass, and passes a post-humanization fact check. The verified `爆款口播稿.txt` is the only retained voiceover copy; superseded script drafts are removed after successful promotion.
-6. **Publication ready:** every `发布信息.txt` has exactly two non-empty lines, a factual Douyin-style title of at most 25 characters, and exactly five topic-specific hashtags.
-7. **Cover ready:** both ratios, exact Chinese text, and reference style pass visual inspection.
-8. **Package complete:** deterministic validation and manual relevance checks pass.
+`state.json` stores each stage status, input fingerprint, completion time, failure detail and measured stage duration. A stage is reusable only when:
 
-## Manifest schema
+- its status is `done`;
+- required artifacts still exist;
+- the current input/config fingerprint equals the stored fingerprint.
 
-Use UTF-8 CSV with these columns:
+Changing an upstream file, model setting, voice, rendering config or other stage dependency invalidates the affected stage automatically. This avoids silently reusing stale outputs.
 
-| Field | Meaning |
-|---|---|
-| `id` | Stable two-digit sequence |
-| `folder_name` | `NN-中文选题` |
-| `topic_cn` | Canonical Chinese topic |
-| `video_title_cn` | Accurate Chinese translation |
-| `original_title` | YouTube title verbatim |
-| `url` | Direct watch URL |
-| `channel` | Channel name |
-| `duration_seconds` | Integer |
-| `max_height` | Highest verified video height |
-| `view_count` | Dated public view count |
-| `verified_at` | ISO date |
-| `source_language` | Primary language |
-| `subtitle_language` | Preferred or available language |
-| `match_grade` | `exact`, `high`, `adjacent`, or `reject` |
-| `rights_note` | License/permission status |
-| `notes` | Editorial or download note |
+## Partial execution
 
-## Performance audit fields
+`--only s3,s4,...` runs exactly the selected stages. S9 is not implicitly forced for a partial rerun. A full run includes S1-S9.
 
-Keep raw and normalized values separate: platform, screenshot, capture time, displayed date, raw title, canonical topic, views/reads, impressions, likes, comments, duration, and visible notes.
+A batch exits non-zero if any selected topic fails, unless `--allow-partial` is explicitly supplied.
 
-For each platform calculate sample count, total visible consumption, median, and top outliers. Explain that cross-platform totals combine different metrics and are not unique-user counts.
+## Topic output
 
-## Topic scoring
-
-- **Danger/conflict:** clear stakes or failure cost.
-- **Visual density:** new usable evidence or imagery every 10–20 seconds.
-- **Counterintuitive insight:** one sentence overturns a common assumption.
-- **Numeric scale:** money, time, people, distance, or size clarifies stakes.
-- **Source/rights:** credible, high-quality, accessible source with usable authorization.
-
-Use 20–25 as production-ready, 16–19 as conditional, and below 16 as reject or research-only.
-
-## Source acceptance
-
-Accept only when the URL opens as a single video, duration and resolution meet thresholds, the main narrative supports the proposed angle, source credibility is cross-checkable, subtitle availability is known, and the rights note is recorded.
-
-An adjacent source may supply footage but cannot be the only factual basis for an exact-topic script.
-
-## Folder acceptance
-
-Confirm:
-
-- exactly one primary source video under a standard name;
-- at least one readable SRT;
-- one publication title of at most 25 characters and exactly five hashtags on a separate second line;
-- no headings, production notes, calls to action, repeated long paragraphs, assistant route markers, or unjustified AI-template sentence shells in the voiceover;
-- exactly one retained voiceover deliverable named `爆款口播稿.txt`, with no superseded `爆款钩子文案.txt` or versioned `爆款口播稿-*` copies;
-- the voiceover contains only final spoken text and shows no skipped Humanizer gate, exposed audit notes, fabricated details, or obvious template language;
-- both requested covers have correct ratios and exact in-image text;
-- no zero-byte files;
-- no silently overwritten approved assets.
-
-## Batch handoff
-
-Report complete and incomplete counts, missing items, blocked reasons, subtitle fallback languages, script character range, cover ratio results, manifest path, and output root.
+```text
+<batch>/<NN-topic>/
+├── 素材/高清源视频.mp4
+├── 字幕/字幕.srt
+├── 文案/爆款口播稿.txt
+├── 文案/script_map.json
+├── 配音/*.wav
+├── 配音/timing.json
+├── edit_decision.json
+├── 成片工程/
+├── 成片.mp4
+├── 发布/
+│   ├── 国内平台.txt
+│   ├── 海外平台.txt
+│   ├── 封面文案.txt
+│   └── 发布信息.json
+├── 封面/
+│   ├── 封面-9x16.png
+│   ├── 封面-16x9.png
+│   └── 封面-1x1.png
+├── state.json
+└── 验收报告.json
+```

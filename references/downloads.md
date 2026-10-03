@@ -1,72 +1,27 @@
-# Authorized download workflow
+# AutoUP authorized download workflow
 
-## Contents
+Only process media the user is authorized to download and reuse. AutoUP does not bypass DRM, paywalls, private-video access, geographic restrictions or account security.
 
-- Preconditions
-- Dependencies
-- Manifest use
-- Cookie and proxy handling
-- Subtitle selection
-- Failure handling
-- Copyright boundary
+## S1 verification
 
-## Preconditions
+`yt-dlp` metadata inspection records:
 
-Download only when the user has authorized the action and has a lawful basis to use the source. Public viewing does not imply permission to download, republish, or monetize.
+- source URL and video ID;
+- title/channel;
+- duration and highest available height;
+- exact selected English subtitle language;
+- whether that subtitle is manual or automatic.
 
-Never bypass DRM, paywalls, private-video access, regional controls, bot protections, or account security. Do not install credential helpers or browser automation packages without explicit approval.
+The batch verifier can use bounded concurrency via `download.verify_workers`.
 
-## Dependencies
+## S2 download
 
-The download script expects PowerShell 5.1+, `yt-dlp` on `PATH` or supplied with `-YtDlp`, and `ffmpeg` on `PATH` or supplied with `-FfmpegLocation`.
+The exact subtitle language selected in S1 is passed into S2. Video download is capped by `download.max_height`.
 
-Use an up-to-date `yt-dlp`. Record the version in troubleshooting notes.
+If the resulting container is not MP4, AutoUP uses FFmpeg to remux with stream copy. If stream copy cannot produce a valid MP4, it transcodes. It never changes a `.webm` or `.mkv` extension to `.mp4` without a real container conversion.
 
-## Manifest use
+Subtitles are normalized to `字幕/字幕.srt`. If a download leaves VTT only, FFmpeg conversion is used as a bounded fallback.
 
-Start with:
+## Local settings
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/download_from_manifest.ps1 `
-  -Manifest topics.csv `
-  -OutputRoot "D:\自动剪辑\AutoYY-20260101-示例项目" `
-  -PlanOnly
-```
-
-Review the plan, then remove `-PlanOnly` to download. Optional parameters:
-
-```powershell
--YtDlp "D:\Tools\yt-dlp.exe"
--FfmpegLocation "D:\Tools\ffmpeg\bin"
--CookiesFromBrowser "chrome"
--Proxy "socks5://127.0.0.1:1080"
--MaxHeight 1080
--MinHeight 720
-```
-
-Do not hardcode a proxy, browser, executable, or disk path into the manifest.
-
-## Cookie and proxy handling
-
-Use browser cookies only after explicit authorization. Ask the user to close Chrome if the cookie database is locked. Never print, copy, or persist cookie contents in logs or output folders.
-
-Use a proxy only when the user supplies or authorizes it. Report proxy failures separately from availability.
-
-## Subtitle selection
-
-Preference: manual English, automatic English, manual Chinese or another language, then automatic subtitles in another available language.
-
-Normalize the selected output to `字幕.srt`. Record the selected language. Do not claim English subtitles when a fallback was used.
-
-## Failure handling
-
-- Resume partial media; do not delete it automatically.
-- Skip an existing playable source and SRT.
-- Distinguish authentication, geo restriction, missing formats, missing subtitles, disk space, and network failures.
-- Retry transient failures with bounded retries.
-- If metadata succeeds but media fails, retain the verified manifest row and mark the topic blocked.
-- Do not lower resolution below the user's threshold silently.
-
-## Copyright boundary
-
-Preserve source URLs, channel names, verification dates, and licensing notes. Prefer owned, licensed, Creative Commons, public-domain, or explicitly permitted material. When permission is unclear, provide research and metadata but flag production use for rights review.
+Use `autoup/config.local.yaml`, environment variables or `--set` for local FFmpeg paths, proxies and output locations. Do not commit browser cookies, API keys or machine-specific paths.

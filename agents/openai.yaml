@@ -1,4 +1,4 @@
 interface:
-  display_name: "AutoYY"
-  short_description: "从数据选题到下载、去AI味口播稿、封面和发布信息的一体化流程"
-  default_prompt: "Use $autoyy to run the documentary workflow in D:\\自动剪辑, including mandatory embedded Humanizer processing for every voiceover, then covers, publication metadata, and final validation."
+  display_name: "AutoUP"
+  short_description: "纪录片解说自动流水线：核验、下载、文案、配音、匹配、渲染、发布资料、封面与验收"
+  default_prompt: "Use $autoup to run or resume the AutoUP S1-S9 pipeline. Keep facts grounded in source subtitles, use fingerprinted stage state, and do not report completion unless the requested validation gates pass."
