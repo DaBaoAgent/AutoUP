@@ -4,9 +4,8 @@ from types import SimpleNamespace
 import pytest
 import yt_dlp
 
-from autoup import run, state, utils
+from autoup import run, state, tts, utils
 from autoup.stages import download, render
-from autoup import tts
 
 
 def test_download_fetch_meta_and_verify_branches(monkeypatch):
