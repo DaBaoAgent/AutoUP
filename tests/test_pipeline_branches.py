@@ -303,3 +303,43 @@ def test_render_helpers_and_run(tmp_path, monkeypatch):
     output = render.run(topic)
     assert output.exists()
     assert (topic / "成片工程" / "render_report.json").exists()
+
+
+def test_render_plan_rejects_missing_or_duplicate_mapping(monkeypatch):
+    monkeypatch.setattr(
+        render.config,
+        "get",
+        lambda key, default=None: {"voice.gap_seconds": 0.3}.get(key, default),
+    )
+    timing = {
+        "sentences": [
+            {"index": 1, "text": "甲", "audio": "1.wav", "duration": 1.0},
+        ]
+    }
+    with pytest.raises(ValueError, match="缺少句子"):
+        render.plan_timeline({"items": []}, timing, 10.0)
+
+    duplicate = {
+        "items": [
+            {"sentence_index": 1, "start": 0.0, "end": 2.0},
+            {"sentence_index": 1, "start": 3.0, "end": 5.0},
+        ]
+    }
+    with pytest.raises(ValueError, match="一语句一画面"):
+        render.plan_timeline(duplicate, timing, 10.0)
+
+
+def test_state_voice_reference_tracks_file(tmp_path, monkeypatch):
+    reference = tmp_path / "voice.wav"
+    reference.write_bytes(b"voice-data")
+    monkeypatch.setattr(
+        state.config,
+        "get",
+        lambda key, default=None: str(reference)
+        if key == "voice.gpt_sovits.voices.special.ref_audio_path"
+        else default,
+    )
+    result = state._voice_reference("special")
+    assert result is not None
+    assert result["exists"] is True
+    assert result["size"] == len(b"voice-data")
