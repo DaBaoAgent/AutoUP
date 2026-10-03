@@ -1,0 +1,16 @@
+# 复制为 autoup/config.local.yaml 后按本机环境修改。
+paths:
+  ffmpeg: "D:/tools/ffmpeg/ffmpeg.exe"
+  ffprobe: "D:/tools/ffmpeg/ffprobe.exe"
+  gpt_sovits_root: "D:/tools/GPT-SoVITS"
+  output_root: "D:/AutoUP"
+
+voice:
+  gpt_sovits:
+    voices:
+      default:
+        ref_audio_path: "D:/voices/narrator.wav"
+        prompt_text: "参考音频对应的原文"
+
+# API Key 不要写进配置文件：
+# PowerShell: $env:GLM_API_KEY = "..."
