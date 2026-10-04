@@ -1,9 +1,4 @@
-"""S4 配音: 文案分句 → 逐句 TTS(双引擎自动降级) → 实测时长 → timing.json。
-
-输入: <选题>/文案/爆款口播稿.txt
-输出: <选题>/配音/0001.wav... + <选题>/配音/timing.json
-幂等: 已存在且大于 1KB 的单句音频直接复用(断点续传)。
-"""
+"""S4 配音：逐句 TTS + 输入指纹缓存，避免文案/音色变化后误复用旧音频。"""
 from __future__ import annotations
 
 import logging
@@ -18,6 +13,24 @@ SCRIPT_NAME = "爆款口播稿.txt"
 MIN_WAV_BYTES = 1024
 
 
+def _voice_fingerprint(text: str, voice: str) -> str:
+    voice_config = config.get("voice", {}) or {}
+    ref_sig = None
+    ref = config.get(f"voice.gpt_sovits.voices.{voice}.ref_audio_path")
+    if ref:
+        ref_path = Path(str(ref)).expanduser()
+        if ref_path.exists():
+            ref_sig = utils.file_fingerprint(ref_path)
+    return utils.stable_hash(
+        {
+            "text": text,
+            "voice": voice,
+            "voice_config": voice_config,
+            "reference_audio": ref_sig,
+        }
+    )
+
+
 def run(topic_dir: Path, voice: str = "default", max_sentences: int | None = None) -> Path:
     script = topic_dir / "文案" / SCRIPT_NAME
     if not script.exists():
@@ -28,39 +41,79 @@ def run(topic_dir: Path, voice: str = "default", max_sentences: int | None = Non
 
     out_dir = topic_dir / "配音"
     out_dir.mkdir(parents=True, exist_ok=True)
+    previous = utils.read_json(out_dir / "timing.json", default={}) or {}
+    previous_by_index = {
+        int(item.get("index", 0)): item
+        for item in previous.get("sentences", [])
+        if item.get("index")
+    }
 
     sentences = utils.split_sentences(text)
     if max_sentences:
         sentences = sentences[:max_sentences]
         log.warning("测试模式: 仅处理前 %d 句", max_sentences)
-    total = utils.estimate_duration("".join(sentences))
-    log.info("分句 %d 段, 预估总时长 %.0fs (%.1f 分钟)", len(sentences), total, total / 60)
 
     entries: list[dict] = []
-    for i, sent in enumerate(sentences, 1):
-        wav = out_dir / f"{i:04d}.wav"
-        if wav.exists() and wav.stat().st_size > MIN_WAV_BYTES:
-            dur = utils.audio_duration(wav)
-            entries.append({"index": i, "text": sent, "audio": wav.name,
-                            "duration": round(dur, 3), "engine": "cached"})
-            log.info("[%d/%d] 复用已有音频 %.1fs", i, len(sentences), dur)
+    expected_files: set[str] = set()
+    for index, sentence in enumerate(sentences, 1):
+        wav = out_dir / f"{index:04d}.wav"
+        expected_files.add(wav.name)
+        fingerprint = _voice_fingerprint(sentence, voice)
+        old = previous_by_index.get(index) or {}
+        cache_ok = (
+            wav.exists()
+            and wav.stat().st_size > MIN_WAV_BYTES
+            and old.get("fingerprint") == fingerprint
+        )
+        if cache_ok:
+            duration = utils.audio_duration(wav)
+            entries.append(
+                {
+                    "index": index,
+                    "text": sentence,
+                    "audio": wav.name,
+                    "duration": round(duration, 3),
+                    "engine": old.get("engine", "cached"),
+                    "fingerprint": fingerprint,
+                }
+            )
+            log.info("[%d/%d] 复用缓存 %.1fs", index, len(sentences), duration)
             continue
-        audio, engine = tts_synthesize(sent, wav)
-        if audio is None:
-            raise RuntimeError(f"第 {i} 句全部 TTS 引擎失败: {sent[:50]}…")
-        dur = utils.audio_duration(wav)
-        entries.append({"index": i, "text": sent, "audio": wav.name,
-                        "duration": round(dur, 3), "engine": engine})
-        log.info("[%d/%d] %s %.1fs: %s", i, len(sentences), engine, dur, sent[:30])
 
+        if wav.exists():
+            wav.unlink()
+        audio, engine = tts_synthesize(sentence, wav, voice=voice)
+        if audio is None or not wav.exists() or wav.stat().st_size <= MIN_WAV_BYTES:
+            raise RuntimeError(f"第 {index} 句全部 TTS 引擎失败: {sentence[:50]}…")
+        duration = utils.audio_duration(wav)
+        entries.append(
+            {
+                "index": index,
+                "text": sentence,
+                "audio": wav.name,
+                "duration": round(duration, 3),
+                "engine": engine,
+                "fingerprint": fingerprint,
+            }
+        )
+        log.info("[%d/%d] %s %.1fs: %s", index, len(sentences), engine, duration, sentence[:30])
+
+    for wav in out_dir.glob("*.wav"):
+        if wav.name not in expected_files and wav.stem.isdigit():
+            wav.unlink()
+
+    gap = float(config.get("voice.gap_seconds", 0.3))
     timing = {
         "voice": voice,
-        "gap_seconds": float(config.get("voice.gap_seconds", 0.3)),
-        "total_duration": round(sum(e["duration"] for e in entries)
-                                + config.get("voice.gap_seconds", 0.3) * max(len(entries) - 1, 0), 3),
+        "gap_seconds": gap,
+        "total_duration": round(
+            sum(entry["duration"] for entry in entries)
+            + gap * max(len(entries) - 1, 0),
+            3,
+        ),
         "sentences": entries,
     }
-    out = out_dir / "timing.json"
-    utils.write_json(out, timing)
-    log.info("timing.json 完成: %d 句, 配音净时长 %.1fs", len(entries), timing["total_duration"])
-    return out
+    output = out_dir / "timing.json"
+    utils.write_json(output, timing)
+    log.info("S4 完成: %d 句，配音总时长 %.1fs", len(entries), timing["total_duration"])
+    return output

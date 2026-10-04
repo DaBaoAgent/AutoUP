@@ -1,15 +1,12 @@
-"""S8 封面: 源片帧 + 金黄主标题/白副标题(黑描边+投影) → 9:16 / 16:9 / 1:1 三比例。
-
-版式标准继承 AutoYY: 特大金黄主标题+黑描边黑投影, 白色副标题约为主标题 2/3 宽,
-上半区居中。默认黑体加粗; 书法字体可通过 cover.font_path 指定。
-"""
+"""S8 封面：源片帧 + 6/8字标题，输出 9:16 / 16:9 / 1:1。"""
 from __future__ import annotations
 
 import logging
 from pathlib import Path
 
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+
 from .. import config, utils
-from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 
 log = logging.getLogger("autoup.s8")
 
@@ -17,105 +14,189 @@ SIZES = {"9x16": (1080, 1920), "16x9": (1920, 1080), "1x1": (1080, 1080)}
 GOLD = (255, 201, 60)
 
 
-def _load_font(size: int):
-    custom = config.get("cover.font_path")
-    path = Path(str(custom)) if custom else Path("C:/Windows/Fonts/simhei.ttf")
-    if not path.exists():
-        path = Path("C:/Windows/Fonts/msyhbd.ttc")
-    return ImageFont.truetype(str(path), size)
+def _resolve_font() -> Path:
+    raw = config.get("cover.font_path")
+    if raw:
+        path = Path(str(raw)).expanduser()
+        if not path.is_absolute():
+            path = config.repo_root() / path
+        if path.exists():
+            return path
+    bundled = config.repo_root() / "assets" / "fonts" / "05_江西拙楷.ttf"
+    if bundled.exists():
+        return bundled
+    raise FileNotFoundError("找不到封面字体，请配置 cover.font_path")
 
 
-def _draw_text_layer(w: int, main: str, sub: str) -> Image.Image:
-    """透明文字层: 主标题(金黄+黑描边+投影) + 副标题(白+黑描边), 居中。"""
-    layer = Image.new("RGBA", (w, w), (0, 0, 0, 0))
-    d = ImageDraw.Draw(layer)
-    # 主标题字号: 6 字占宽度 ~86%
-    size = int(w * 0.86 / max(len(main), 1))
-    font = _load_font(size)
-    bbox = d.textbbox((0, 0), main, font=font, stroke_width=max(size // 14, 4))
-    tw = bbox[2] - bbox[0]
-    if tw > w * 0.92:                      # 防溢出缩字号
-        size = int(size * w * 0.92 / tw)
+def _load_font(size: int) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(str(_resolve_font()), max(size, 10))
+
+
+def _measure(draw: ImageDraw.ImageDraw, text: str, font, stroke_width: int) -> tuple[int, int, tuple]:
+    bbox = draw.textbbox((0, 0), text, font=font, stroke_width=stroke_width)
+    return bbox[2] - bbox[0], bbox[3] - bbox[1], bbox
+
+
+def _fit_font(draw: ImageDraw.ImageDraw, text: str, initial_size: int, max_width: int):
+    size = max(initial_size, 10)
+    while size > 20:
         font = _load_font(size)
-    x = (w - tw) // 2
+        stroke = max(size // 14, 4)
+        width, _, _ = _measure(draw, text, font, stroke)
+        if width <= max_width:
+            return size, font
+        size = max(int(size * 0.94), size - 2)
+    return size, _load_font(size)
+
+
+def _draw_text_layer(width: int, main: str, sub: str) -> Image.Image:
+    layer = Image.new("RGBA", (width, width), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer)
+
+    initial = int(width * 0.86 / max(len(main), 1))
+    size, font = _fit_font(draw, main, initial, int(width * 0.92))
+    stroke = max(size // 13, 5)
+    main_width, _, _ = _measure(draw, main, font, stroke)
+    x = (width - main_width) // 2
     y = 0
-    sw = max(size // 13, 5)
-    # 投影
-    d.text((x + size // 22, y + size // 16), main, font=font,
-           fill=(0, 0, 0, 200), stroke_width=sw, stroke_fill=(0, 0, 0, 200))
-    # 金黄主体 + 黑描边
-    d.text((x, y), main, font=font, fill=GOLD + (255,), stroke_width=sw,
-           stroke_fill=(0, 0, 0, 255))
-    # 副标题: 约 2/3 宽
-    ssize = int(size * 0.62 * len(main) / max(len(sub), 1) * 0.98)
-    sfont = _load_font(ssize)
-    sbbox = d.textbbox((0, 0), sub, font=sfont, stroke_width=max(ssize // 14, 3))
-    stw = sbbox[2] - sbbox[0]
-    sx = (w - stw) // 2
-    sy = y + int(size * 1.28)
-    ssw = max(ssize // 13, 3)
-    d.text((sx + ssize // 22, sy + ssize // 16), sub, font=sfont,
-           fill=(0, 0, 0, 190), stroke_width=ssw, stroke_fill=(0, 0, 0, 190))
-    d.text((sx, sy), sub, font=sfont, fill=(255, 255, 255, 255),
-           stroke_width=ssw, stroke_fill=(0, 0, 0, 255))
-    bbox_full = layer.getbbox()
-    return layer.crop(bbox_full) if bbox_full else layer
+
+    draw.text(
+        (x + size // 22, y + size // 16),
+        main,
+        font=font,
+        fill=(0, 0, 0, 200),
+        stroke_width=stroke,
+        stroke_fill=(0, 0, 0, 200),
+    )
+    draw.text(
+        (x, y),
+        main,
+        font=font,
+        fill=GOLD + (255,),
+        stroke_width=stroke,
+        stroke_fill=(0, 0, 0, 255),
+    )
+
+    sub_initial = int(size * 0.62 * len(main) / max(len(sub), 1) * 0.98)
+    sub_size, sub_font = _fit_font(draw, sub, sub_initial, int(width * 0.72))
+    sub_stroke = max(sub_size // 13, 3)
+    sub_width, _, _ = _measure(draw, sub, sub_font, sub_stroke)
+    sub_x = (width - sub_width) // 2
+    sub_y = y + int(size * 1.28)
+    draw.text(
+        (sub_x + sub_size // 22, sub_y + sub_size // 16),
+        sub,
+        font=sub_font,
+        fill=(0, 0, 0, 190),
+        stroke_width=sub_stroke,
+        stroke_fill=(0, 0, 0, 190),
+    )
+    draw.text(
+        (sub_x, sub_y),
+        sub,
+        font=sub_font,
+        fill=(255, 255, 255, 255),
+        stroke_width=sub_stroke,
+        stroke_fill=(0, 0, 0, 255),
+    )
+    bounds = layer.getbbox()
+    return layer.crop(bounds) if bounds else layer
 
 
-def _crop_ratio(img: Image.Image, w: int, h: int) -> Image.Image:
-    ratio = w / h
-    iw, ih = img.size
-    if iw / ih > ratio:
-        nw = int(ih * ratio)
-        img = img.crop(((iw - nw) // 2, 0, (iw + nw) // 2, ih))
+def _crop_ratio(image: Image.Image, width: int, height: int) -> Image.Image:
+    ratio = width / height
+    image_width, image_height = image.size
+    if image_width / image_height > ratio:
+        new_width = int(image_height * ratio)
+        image = image.crop(
+            ((image_width - new_width) // 2, 0, (image_width + new_width) // 2, image_height)
+        )
     else:
-        nh = int(iw / ratio)
-        img = img.crop((0, (ih - nh) // 2, iw, (ih + nh) // 2))
-    return img.resize((w, h), Image.LANCZOS)
+        new_height = int(image_width / ratio)
+        image = image.crop(
+            (0, (image_height - new_height) // 2, image_width, (image_height + new_height) // 2)
+        )
+    return image.resize((width, height), Image.Resampling.LANCZOS)
 
 
 def _pick_frame(topic_dir: Path) -> Path:
-    """取 ED 最长段中点的源片帧作为封面底图。"""
-    ed = utils.read_json(topic_dir / "edit_decision.json") or {}
-    items = sorted(ed.get("items", []), key=lambda i: i["end"] - i["start"], reverse=True)
+    edit = utils.read_json(topic_dir / "edit_decision.json") or {}
+    items = sorted(
+        edit.get("items", []),
+        key=lambda item: item["end"] - item["start"],
+        reverse=True,
+    )
     if not items:
-        raise FileNotFoundError("缺少 edit_decision.json 或其中无 items")
-    t = (items[0]["start"] + items[0]["end"]) / 2
-    src = next((f for f in (topic_dir / "素材").iterdir()
-                if f.suffix.lower() in {".mp4", ".mkv", ".webm"}), None)
-    if src is None:
+        raise FileNotFoundError("edit_decision.json 无有效画面段")
+    timestamp = (items[0]["start"] + items[0]["end"]) / 2
+    material = topic_dir / "素材"
+    source = next(
+        (
+            file
+            for file in material.iterdir()
+            if file.suffix.lower() in {".mp4", ".mkv", ".webm"}
+        ),
+        None,
+    ) if material.exists() else None
+    if source is None:
         raise FileNotFoundError("缺少源视频")
-    out = topic_dir / "封面" / "_frame.png"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    p = utils.run([config.ffmpeg(), "-y", "-loglevel", "error", "-ss", t,
-                   "-i", src, "-frames:v", "1", out], desc="抽封面帧")
-    if p.returncode != 0 or not out.exists():
-        raise RuntimeError("抽帧失败")
-    return out
+
+    output = topic_dir / "封面" / "_frame.png"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    proc = utils.run(
+        [
+            config.ffmpeg(),
+            "-y",
+            "-loglevel",
+            "error",
+            "-ss",
+            timestamp,
+            "-i",
+            source,
+            "-frames:v",
+            "1",
+            output,
+        ],
+        desc="抽封面帧",
+    )
+    if proc.returncode != 0 or not output.exists():
+        raise RuntimeError("抽封面帧失败")
+    return output
 
 
 def run(topic_dir: Path) -> Path:
-    pub = topic_dir / "发布" / "封面文案.txt"
-    if not pub.exists():
-        raise FileNotFoundError("缺少 封面文案.txt (先跑 S7)")
-    lines = [l.strip() for l in pub.read_text(encoding="utf-8-sig").splitlines() if l.strip()]
-    main, sub = (lines + ["", ""])[:2]
+    copy_path = topic_dir / "发布" / "封面文案.txt"
+    if not copy_path.exists():
+        raise FileNotFoundError("缺少 封面文案.txt（先跑 S7）")
+    lines = [
+        line.strip()
+        for line in copy_path.read_text(encoding="utf-8-sig").splitlines()
+        if line.strip()
+    ]
+    if len(lines) < 2:
+        raise ValueError("封面文案必须包含主标题和副标题两行")
+    main, sub = lines[:2]
+    if len(main) != 6 or len(sub) != 8:
+        raise ValueError(f"封面标题长度必须 6/8 字，当前 {len(main)}/{len(sub)}")
 
     frame = _pick_frame(topic_dir)
-    base = Image.open(frame).convert("RGB")
+    with Image.open(frame) as source:
+        base = source.convert("RGB")
     base = ImageEnhance.Brightness(base).enhance(0.82)
     base = ImageEnhance.Contrast(base).enhance(1.06)
 
-    out_dir = topic_dir / "封面"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    for name, (w, h) in SIZES.items():
-        bg = _crop_ratio(base, w, h).filter(ImageFilter.GaussianBlur(1.2))
-        text_layer = _draw_text_layer(w, main, sub)
-        # 文字层放上半区
-        ty = int(h * (0.14 if h > w else 0.16))
-        bg = bg.convert("RGBA")
-        bg.alpha_composite(text_layer, ((w - text_layer.width) // 2, ty))
-        out = out_dir / f"封面-{name}.png"
-        bg.convert("RGB").save(out, quality=92)
-        log.info("封面 %s: %s", name, out)
-    return out_dir
+    output_dir = topic_dir / "封面"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for name, (width, height) in SIZES.items():
+        background = _crop_ratio(base, width, height).filter(ImageFilter.GaussianBlur(1.2))
+        text_layer = _draw_text_layer(width, main, sub)
+        top = int(height * (0.14 if height > width else 0.16))
+        background = background.convert("RGBA")
+        background.alpha_composite(
+            text_layer,
+            ((width - text_layer.width) // 2, top),
+        )
+        output = output_dir / f"封面-{name}.png"
+        background.convert("RGB").save(output, format="PNG", optimize=True)
+        log.info("封面 %s: %s", name, output)
+    return output_dir

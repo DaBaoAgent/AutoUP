@@ -1,21 +1,25 @@
-# AutoYY 项目关键环境事实（2026-08）
+# AutoUP 环境约定
 
-内存条目已精简,完整事实存此。修改/维护 AutoYY 时先读本文件。
+AutoUP 不绑定任何开发者电脑路径。仓库提交的 `autoup/config.yaml` 只包含可移植默认值。
 
-## 项目位置与同步
+## 配置优先级
 
-- 项目根目录：`D:\@kaifa\AutoYY`
-- Git 仓库：`DaBaoAgent/AutoYY`（GitHub,HTTPS 被墙,走 SSH 443 端口）
-- 本机 codex + hermes 均通过 **junction 指向**同一份源码 —— 任意一端 commit + push 即多端同步；另一台机器只 pull 即可
-- 注意：junction 方案下不要用删除目录的方式重装,会破坏链接
+1. `autoup/config.yaml`：仓库默认值；
+2. `autoup/config.local.yaml`：本机覆盖，已加入 `.gitignore`；
+3. `AUTOUP_*` 环境变量；
+4. 命令行 `--set key=value`：仅本次运行覆盖。
 
-## 文案标准
+可从 `autoup/config.example.yaml` 复制一份本机配置。
 
-- 口播文案：4500-5500 字 / 纯中文 / 去 AI 味
-- 具体标准见本技能 `references/content-style.md`（或 creative 下文案类技能）
+## 必要环境
 
-## 已知坑
+- Python 3.11+
+- FFmpeg / ffprobe
+- 一个 OpenAI 兼容的 LLM API；默认配置使用 GLM
+- Edge TTS 可直接作为免费 TTS；GPT-SoVITS 为可选本地引擎
 
-- `read_file` 对中文 txt 会误判为二进制 → 用 python 读（`open(..., encoding='utf-8')`）
-- 委托子代理输出路径必须写 E 盘（曾误写 `D:\@油管二创素材` 建出空骨架需清理）
-- delegation 已放宽：1800s / 150 轮
+API Key 使用环境变量，例如 `GLM_API_KEY`，不要提交到仓库。
+
+## 开发与验收
+
+依赖与工具统一由 `pyproject.toml` + `uv.lock` 管理。CI 在 Linux 做完整 lint/test/coverage，在 Windows 做安装和核心 smoke test。

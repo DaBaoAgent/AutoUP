@@ -1,130 +1,38 @@
-# Content and cover style
+# AutoUP content and cover rules
 
-## Contents
+## Voiceover
 
-- Voiceover objective
-- Voiceover structure
-- Language rules
-- Prohibited patterns
-- Mandatory Humanizer pass
-- Publication information
-- Topic covers
-- Collection covers
-- Cover quality control
+- Output only narrator-ready Chinese prose.
+- Facts must come from the subtitle window supplied to that generation section.
+- Do not invent names, numbers, events, motives or causal links.
+- Prefer short and medium spoken sentences with concrete verbs and nouns.
+- Avoid production labels, editing instructions, generic engagement calls and formulaic AI transitions.
+- Default target is controlled by `script.target_chars` and `script.tolerance`; validation enforces both lower and upper bounds.
+- When the source cannot support the requested length, fail rather than padding with unsupported material.
 
-## Voiceover objective
+S3 writes `script_map.json` so each generated section retains its source time range.
 
-Write text that can be pasted directly into text-to-speech or read by a narrator. Sound like a knowledgeable friend telling a surprising true story, not a paper, editing brief, lesson plan, or AI outline.
+## Publication material
 
-Default target: 4,500–5,500 non-whitespace Chinese characters for a roughly 15-minute finished piece. Adjust to narration speed and requested duration. Substance has priority over length.
-
-## Voiceover structure
-
-- Open within 80–150 characters with danger, contradiction, scale, or a result that demands explanation.
-- Establish the central question quickly.
-- Move chronologically or causally; introduce one idea per paragraph.
-- Renew curiosity every 500–800 characters through a concrete discovery, consequence, or reversal.
-- Explain numbers by comparison when useful.
-- Resolve the opening question and connect the ending to people, choices, or present-day meaning.
-
-Do not announce structural beats. The listener should feel them, not hear their labels.
-
-## Language rules
-
-- Prefer short and medium sentences that are easy to say in one breath.
-- Use everyday verbs and concrete nouns.
-- Explain specialist terms immediately.
-- Rewrite tongue-twisters, stacked modifiers, and dense abstractions.
-- Use cautious wording for disputed claims.
-- Keep names, dates, quantities, and causal statements consistent with checked sources.
-
-## Prohibited patterns
-
-Do not include:
-
-- `【开场钩子】`, `【核心悬念】`, `【推进】`, `【结尾升华】`, or `【补充叙事】`;
-- “镜头切到”“画面来到”“字幕里”等 editing directions;
-- “这段视频最容易省略的一层”“回看整条因果链”“前面三条线索共同指向”等 meta-commentary;
-- generic filler copied between topics;
-- repeated complete paragraphs;
-- unrelated systems or engineering language inserted into an animal, history, or culture topic;
-- “点赞、关注、收藏、转发”等 calls to action unless explicitly requested;
-- fabricated dialogue, motives, facts, numbers, or conclusions.
-
-Do not use a fixed transition library to expand every script. When the source is thin, find another reliable source or shorten the piece.
-
-## Mandatory Humanizer pass
-
-Every generated or revised voiceover must pass `vendor/blader-humanizer/SKILL.md` in Embedded mode before it is saved as final. Run its draft, AI-pattern audit, fabrication audit, and final-rewrite loop internally. The output file must contain only the final spoken Chinese text.
-
-During humanization:
-
-- preserve all source-supported facts, names, dates, quantities, quotations, and causal claims;
-- preserve the user's approved voice and useful specific details;
-- remove formulaic signposting, inflated significance, promotional wording, forced groups of three, false contrasts, synonym cycling, generic conclusions, manufactured punchlines, and repetitive transitions;
-- vary sentence length naturally without turning the script into stacked dramatic fragments;
-- remove em and en dashes unless an approved user writing sample clearly requires them;
-- never add a fact merely to make a sentence sound more human.
-
-Apply the bundled Humanizer patterns to Chinese as well. Remove or repair these high-priority shells when they are padding rather than necessary meaning:
-
-- 「不是A，而是B」「并非A，而是B」「不只是A，更是B」「与其说A，不如说B」;
-- 「先A，再B」「第一步…第二步…」when the order does not change the outcome;
-- 「真正重要的是」「本质上」「核心在于」「底层逻辑」;
-- 「接下来」「我们可以看到」「值得注意的是」「不可否认的是」「总的来说」「说白了」「划重点」;
-- repeated 「观点：解释」paragraphs, mechanically even paragraph lengths, and three or more clauses with identical grammar;
-- generic ending questions such as 「你觉得呢？」 or 「是不是很震撼？」 unless the user explicitly requests a specific comment hook.
-
-After the pass, compare the final script with the source material and read it aloud. Repair awkward pronunciation, unsupported additions, factual drift, and accidental omissions. If substantial material is added after this check, run the Humanizer pass again. A script that skips this gate is not final.
-
-Keep versioned drafts during revision. After the approved text has been promoted to `爆款口播稿.txt`, read it back and confirm it is non-empty and still passes factual, length, speakability, and Humanizer checks. Then delete superseded voiceover files in that topic directory, including `爆款钩子文案.txt` and versioned `爆款口播稿-*` drafts. Keep the drafts when promotion or validation fails. Do not treat subtitles, research notes, publication information, or unrelated text documents as disposable drafts.
-
-## Publication information
-
-Use exactly:
+Domestic output:
 
 ```text
-<title of at most 25 characters>
-#标签1 #标签2 #标签3 #标签4 #标签5
+<title no longer than 25 characters>
+#tag1 #tag2 #tag3 #tag4 #tag5
 ```
 
-Write exactly two non-empty lines. Do not add `标题：`, `爆款标题：`, `标签：`, section headings, blank lines, emoji, publishing advice, platform notes, cover copy, or interaction prompts.
+Rules are enforced in code: non-empty title, exactly five unique tags, no spaces inside tags, and no `#` inside model-returned tag values.
 
-Count every Chinese character, digit, Latin letter, punctuation mark, and space toward the 25-character title limit. The title should follow Douyin's high-click logic while remaining factual: build an information gap with a checked number, contrast, consequence, or concise question. Prefer a concrete causal question or measurable scale over a proper noun alone. Never fabricate or exaggerate beyond the source.
+Overseas output uses an English title no longer than 90 characters plus an English description. Chinese characters in the English material fail validation.
 
-Put exactly five space-separated, topic-specific hashtags on the second line.
+## Covers
 
-## Topic covers
+AutoUP generates three delivery ratios:
 
-Use `assets/topic-cover-3x4-approved.png` and `assets/topic-cover-4x3-approved.png` as the approved style references.
+- 9:16 — 1080×1920
+- 16:9 — 1920×1080
+- 1:1 — 1080×1080
 
-- Ratios: 3:4 portrait and 4:3 landscape.
-- Background: photorealistic documentary image tied to the exact topic.
-- Type: rough handwritten Chinese brush lettering with strong contrast.
-- Main title: exactly six Chinese characters, one line.
-- Subtitle: exactly eight Chinese characters, one line.
-- Placement: upper half.
-- Width: subtitle about two-thirds the main-title width.
-- Main-title treatment: extra-large vivid golden-yellow brush calligraphy, thin crisp black outline, and strong soft black drop shadow; nearly span the available safe width.
-- Subtitle treatment: medium-large white brush calligraphy, thin crisp black outline, and strong soft black drop shadow; center directly below the main title.
-- Keep both lines visually centered with clear spacing and safe margins; do not crop a stroke.
-- No extra text, English, logo, watermark, or decorative badge.
+Cover main text must be exactly six Chinese characters and subtitle exactly eight. The renderer uses the bundled/configured font, golden main title, white subtitle, dark outline/shadow, and recalculates text bounds after font fitting to avoid off-center long text.
 
-## Collection covers
-
-Use `assets/collection-cover-1x1.png` and `assets/collection-cover-4x3.png` as style references.
-
-- Ratios: 1:1 and 4:3.
-- Background: one iconic photorealistic scene expressing the collection.
-- Title: exact four-character collection name, one centered line.
-- Type: warm antique-gold rough brush calligraphy with a subtle dark shadow.
-- No subtitle or other text.
-
-## Cover quality control
-
-1. Visually read every Chinese character.
-2. Confirm no unwanted words or pseudo-text.
-3. Measure pixel dimensions and aspect ratio.
-4. Confirm the scene is realistic and topic-relevant.
-5. Compare both variants for consistent identity.
-6. Save drafts with versioned names; promote only approved files to final names.
+Demo images and historical covers are retained in the repository as reference/history assets; runtime code must not depend on historical cover filenames.

@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - "refactor/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+      - name: Verify lockfile
+        run: uv lock --check
+      - name: Install
+        run: uv sync --all-extras --locked
+      - name: Compile
+        run: uv run python -m compileall -q autoup tests
+      - name: Ruff
+        run: uv run ruff check autoup tests
+      - name: Tests
+        run: uv run pytest -q --cov=autoup --cov-report=term-missing --cov-report=xml
+
+  windows-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+      - name: Install
+        run: uv sync --all-extras --locked
+      - name: Smoke tests
+        run: uv run pytest -q tests/test_smoke.py tests/test_config.py tests/test_utils.py
